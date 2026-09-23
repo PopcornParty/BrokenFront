@@ -109,7 +109,7 @@ export class Input {
       el.addEventListener('mouseup', up);
     });
 
-    joy.addEventListener('touchstart', (e) => {
+    const startJoy = (e) => {
       e.preventDefault();
       this.enabled = true;
       const t = e.changedTouches[0];
@@ -117,7 +117,10 @@ export class Input {
       this.joy.active = true; this.joy.id = t.identifier;
       this.joy.cx = r.left + r.width / 2; this.joy.cy = r.top + r.height / 2;
       this.updateJoy(t.clientX, t.clientY);
-    }, { passive: false });
+    };
+    joy.addEventListener('touchstart', startJoy, { passive: false });
+    const moveZone = document.getElementById('move-zone');
+    if (moveZone) moveZone.addEventListener('touchstart', startJoy, { passive: false });
 
     look.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -128,6 +131,7 @@ export class Input {
     }, { passive: false });
 
     window.addEventListener('touchmove', (e) => {
+      if (this.joy.active || this.look.active) e.preventDefault();
       for (const t of e.changedTouches) {
         if (this.joy.active && t.identifier === this.joy.id) this.updateJoy(t.clientX, t.clientY);
         if (this.look.active && t.identifier === this.look.id) {
@@ -176,8 +180,9 @@ export class Input {
   }
 
   consumeLook(sens) {
-    const sx = this.lookAccumX * 0.0022 * sens;
-    const sy = this.lookAccumY * 0.0022 * sens;
+    const mul = this.isTouch ? 0.0032 : 0.0022;
+    const sx = this.lookAccumX * mul * sens;
+    const sy = this.lookAccumY * mul * sens;
     this.lookAccumX = 0; this.lookAccumY = 0;
     return { x: sx, y: sy };
   }
