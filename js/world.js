@@ -183,21 +183,27 @@ export class World {
   }
 
   buildTheme(theme) {
-    this.wreck(-4, 2); this.wreck(5, -9); this.wreck(-5, -36);
-    this.trench(0, -18, 13);
-    this.meshBox(-1, this.heightAt(-1, -26) + 0.55, -26, 10, 1.1, 1.5, this.mats.sand, { low: true });
-    this.ruin(-8, -34, 7, 6, 3.6);
-    this.ruin(8, -44, 7, 6, 3.5);
-    this.trench(1, -62, 12);
-    this.crate(4, -60); this.crate(-3, -18);
-    this.rock(-6, -6, 1.3); this.rock(6, -16, 1.15); this.rock(-6, -48, 1.4);
-    this.rock(5, -28, 1.1); this.rock(-3, -72, 1.2);
-    this.wreck(3, -74);
-    this.meshBox(6, this.heightAt(6, -52) + 0.5, -52, 6, 1.0, 1.3, this.mats.sand, { low: true });
-    this.meshBox(-6, this.heightAt(-6, -70) + 0.5, -70, 6, 1.0, 1.3, this.mats.sand, { low: true });
-    if (theme === 'town' || theme === 'final' || theme === 'bunker' || theme === 'outskirts' || theme === 'townedge' || theme === 'approach') {
-      this.ruin(-7, -80, 7, 6.5, 4.2);
-      this.ruin(7, -86, 7, 6.5, 4);
+    let seed = 1;
+    const name = theme || 'chaos';
+    for (let i = 0; i < name.length; i++) seed = (seed * 31 + name.charCodeAt(i)) >>> 0;
+    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const side = (z) => (Math.floor(Math.abs(z) / 16) % 2 ? -1 : 1);
+    this.wreck(-3.5, 3);
+    this.trench(0, -16, 12);
+    for (let z = -10; z > -96; z -= 14) {
+      const s = side(z);
+      const x = s * (5.5 + rnd() * 2.4);
+      const kind = rnd();
+      if (kind < 0.28) this.wreck(x * 0.6, z + rnd() * 3);
+      else if (kind < 0.62) this.ruin(x, z, 6.2 + rnd(), 5.5 + rnd(), 3.2 + rnd() * 1.2);
+      else if (kind < 0.8) this.trench(x * 0.15, z, 9 + rnd() * 4);
+      else this.meshBox(x * 0.4, this.heightAt(x * 0.4, z) + 0.5, z, 7 + rnd() * 2, 1.05, 1.4, this.mats.sand, { low: true });
+      this.rock(-s * (4 + rnd() * 3), z - 5, 0.9 + rnd() * 0.5);
+      if (rnd() > 0.45) this.crate(x * 0.35, z - 3);
+    }
+    if (name === 'town' || name === 'final' || name === 'bunker' || name === 'outskirts' || name === 'townedge' || name === 'approach') {
+      this.ruin(-7, -88, 7, 6.5, 4.2);
+      this.ruin(7, -94, 7, 6.5, 4);
     }
   }
 
