@@ -2,8 +2,9 @@ import { Input } from './input.js';
 import { Game } from './game.js';
 import { loadSave, writeSave, createFresh } from './save.js';
 import { missionById, MISSIONS } from './missions.js';
-import { DEFAULT_SETTINGS } from './config.js';
+import { DEFAULT_SETTINGS, VERSION } from './config.js';
 import * as Audio from './audio.js';
+import { renderChangelog, hasUnseenLog, markLogSeen } from './changelog.js';
 
 const $ = (id) => document.getElementById(id);
 const hide = (el) => el.classList.add('hidden');
@@ -11,7 +12,21 @@ const show = (el) => el.classList.remove('hidden');
 
 const ui = {
   persist(save) { writeSave(save); },
-  setObjective(t) { $('objective-text').textContent = t; },
+  setObjective(obj) {
+    const box = $('objective-box');
+    box.classList.add('complete-flash');
+    setTimeout(() => box.classList.remove('complete-flash'), 650);
+    $('objective-text').textContent = (obj && obj.text) || obj || '';
+    if ($('objective-hint')) $('objective-hint').textContent = (obj && obj.hint) || '';
+  },
+  nav(info) {
+    const el = $('objective-nav');
+    if (!el) return;
+    if (!info) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    $('obj-dist').textContent = Math.max(1, Math.round(info.dist)) + 'm';
+    $('obj-arrow').style.transform = `rotate(${info.angle * 57.3}deg)`;
+  },
   showHud(on) { $('hud').classList.toggle('hidden', !on); $('touch-layer').classList.toggle('hidden', !on); },
   toast(msg) { this.radio(msg); },
   radio(msg) {
@@ -66,6 +81,8 @@ function applySettingsToForm() {
   $('set-diff').value = save.settings.difficulty;
   $('set-vib').checked = save.settings.vibration;
   $('set-swap').checked = save.settings.swapHands;
+  if ($('set-opacity')) $('set-opacity').value = save.settings.buttonOpacity ?? 70;
+  if ($('set-cam')) $('set-cam').checked = save.settings.cameraShake !== false;
   $('soldier-name').value = save.soldier.name;
   $('soldier-kit').value = save.soldier.kit;
   $('soldier-diff').value = save.settings.difficulty;
@@ -80,17 +97,28 @@ function readSettingsFromForm() {
   save.settings.difficulty = $('set-diff').value;
   save.settings.vibration = $('set-vib').checked;
   save.settings.swapHands = $('set-swap').checked;
+  if ($('set-opacity')) save.settings.buttonOpacity = +$('set-opacity').value;
+  if ($('set-cam')) save.settings.cameraShake = $('set-cam').checked;
   writeSave(save);
   Audio.applySettings(save.settings);
   document.body.classList.toggle('swap-hands', !!save.settings.swapHands);
+  document.documentElement.style.setProperty('--btn-a', ((save.settings.buttonOpacity ?? 70) / 100).toFixed(2));
+}
+
+function refreshLogBadge() {
+  const badge = $('log-new');
+  if (badge) badge.classList.toggle('hidden', !hasUnseenLog());
+  if ($('menu-version')) $('menu-version').textContent = 'v' + VERSION;
 }
 
 function showMenu() {
   hide($('boot-screen')); hide($('customize-screen')); hide($('settings-screen'));
-  hide($('credits-screen')); hide($('loading-screen')); hide($('cutscene-screen'));
-  hide($('pause-screen')); hide($('end-screen')); hide($('hud')); hide($('touch-layer'));
+  hide($('credits-screen')); hide($('changelog-screen')); hide($('loading-screen'));
+  hide($('cutscene-screen')); hide($('pause-screen')); hide($('end-screen'));
+  hide($('hud')); hide($('touch-layer'));
   show($('menu-screen'));
   $('btn-continue').classList.toggle('hidden', !save.hasProgress);
+  refreshLogBadge();
 }
 
 function loadMissionFlow(id, checkpoint, skipCine) {
@@ -158,6 +186,15 @@ function wire() {
   $('btn-settings').onclick = () => { Audio.sfxUI(); applySettingsToForm(); show($('settings-screen')); };
   $('btn-credits').onclick = () => { Audio.sfxUI(); show($('credits-screen')); };
   $('btn-credits-back').onclick = () => { hide($('credits-screen')); };
+  $('btn-update-log').onclick = () => {
+    Audio.sfxUI();
+    renderChangelog($('changelog-list'));
+    markLogSeen();
+    refreshLogBadge();
+    hide($('menu-screen'));
+    show($('changelog-screen'));
+  };
+  $('btn-log-back').onclick = () => { hide($('changelog-screen')); showMenu(); };
   $('btn-settings-back').onclick = () => { readSettingsFromForm(); hide($('settings-screen')); };
   $('btn-customize-back').onclick = () => { hide($('customize-screen')); show($('menu-screen')); };
   $('btn-customize-go').onclick = () => {
@@ -177,21 +214,36 @@ function wire() {
   $('btn-pause-settings').onclick = () => { applySettingsToForm(); show($('settings-screen')); };
   $('btn-pause-menu').onclick = () => { if (game) game.running = false; hide($('pause-screen')); showMenu(); };
   $('btn-end-menu').onclick = () => { showMenu(); };
-  ['set-master','set-music','set-sfx'].forEach((id) => {
-    $(id).addEventListener('input', () => { readSettingsFromForm(); });
+
+  ['set-master','set-music','set-sfx','set-opacity'].forEach((id) => {
+    if ($(id)) $(id).addEventListener('input', () => { readSettingsFromForm(); });
+  });
+  const fs = () => {
+    const root = document.documentElement;
+    if (!document.fullscreenElement) {
+      const req = root.requestFullscreen || root.webkitRequestFullscreen;
+      if (req) req.call(root);
+    } else if (document.exitFullscreen) document.exitFullscreen();
+  };
+  ['btn-fullscreen', 'btn-hud-fs', 'btn-menu-fs'].forEach((id) => {
+    if ($(id)) $(id).onclick = () => { Audio.sfxUI(); fs(); };
   });
 }
 
 function boot() {
   applySettingsToForm();
   document.body.classList.toggle('swap-hands', !!save.settings.swapHands);
+  document.documentElement.style.setProperty('--btn-a', ((save.settings.buttonOpacity ?? 70) / 100).toFixed(2));
   Audio.initAudio(save.settings);
   wire();
   let p = 8;
   const iv = setInterval(() => {
     p = Math.min(100, p + 10);
     $('boot-fill').style.width = p + '%';
-    if (p >= 100) { clearInterval(iv); showMenu(); }
+    if (p >= 100) {
+      clearInterval(iv);
+      showMenu();
+    }
   }, 80);
   document.body.addEventListener('pointerdown', () => { Audio.initAudio(save.settings); Audio.resumeAudio(); }, { once: true });
 }

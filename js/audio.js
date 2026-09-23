@@ -81,13 +81,15 @@ export function tickMusic(dt) {
   if (musicTimer <= 0) {
     musicTimer = 3.2 + Math.random() * 2;
     const base = 90 + Math.floor(Math.random() * 3) * 20;
-    beep(base, 1.6, 'sine', 0.04, music);
-    beep(base * 1.5, 1.8, 'sine', 0.02, music);
+    beep(base, 1.8, 'sine', 0.035, music);
+    beep(base * 1.5, 2.0, 'sine', 0.018, music);
   }
   ambTimer -= dt;
   if (ambTimer <= 0) {
-    ambTimer = 2 + Math.random() * 4;
-    if (Math.random() < 0.55) noiseBurst(0.2 + Math.random() * 0.3, 0.06, 700 + Math.random() * 800);
-    else beep(70 + Math.random() * 40, 0.2, 'sawtooth', 0.03);
+    ambTimer = 1.4 + Math.random() * 3.2;
+    const roll = Math.random();
+    if (roll < 0.35) noiseBurst(0.35 + Math.random() * 0.4, 0.07, 500 + Math.random() * 600);
+    else if (roll < 0.7) noiseBurst(0.12, 0.05, 1400);
+    else beep(55 + Math.random() * 30, 0.28, 'sawtooth', 0.025);
   }
 }
