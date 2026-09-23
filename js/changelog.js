@@ -4,6 +4,56 @@ export const SEEN_KEY = 'brokenfront-changelog-seen';
 
 export const CHANGELOG = [
   {
+    version: '1.3.0',
+    title: 'CONTROLS RESTORED',
+    date: '23 September 2026',
+    description: 'Fixes the live build where movement, look and fire did nothing after load. Tightens the HUD so objectives and buttons are readable on a phone.',
+    added: [
+      'Text labels on fire, aim, reload, grenade and sprint',
+      'Clearer mission chip and objective card'
+    ],
+    removed: [],
+    fixed: [
+      'Controls locked after New Campaign / Continue because input started disabled',
+      'Look pad ignoring the first touch',
+      'Keyboard and mouse doing nothing until an enable flag was set'
+    ],
+    improved: [
+      'Mobile button layout and contrast',
+      'Pause / resume recaptures look immediately'
+    ]
+  },
+  {
+    version: '1.2.0',
+    title: 'FRONT REPAIR',
+    date: '23 September 2026',
+    description: 'Fixes the blank Continue world and dead controls after Resume, rebuilds mission loading, and gives each of the seven missions its own battlefield.',
+    added: [
+      'Reliable mission loading screen that only drops into play after the world exists',
+      'World objective beacon on reach points',
+      'Mission / checkpoint HUD chip',
+      'Sprint control on mobile',
+      'Visible error screen if a mission fails to load',
+      'Seven distinct mission environments from open field to final assault'
+    ],
+    removed: [
+      'Scene-destroying world dispose that could leave a blank canvas'
+    ],
+    fixed: [
+      'Continue Campaign loading an empty world',
+      'Resume leaving movement, look and fire disconnected',
+      'Duplicate input listeners on later boots',
+      'Pointer lock not recaptured after pause on desktop',
+      'Invalid saved mission IDs failing to clamp to 1-7'
+    ],
+    improved: [
+      'Buildings with walls, roofs, windows and damaged sections',
+      'Terrain colour, roads, rubble, barrels and smoke',
+      'Objective wording and on-screen distance marker',
+      'Weapon muzzle flash on the viewmodel'
+    ]
+  },
+  {
     version: '1.1.0',
     title: 'BATTLEFIELD EXPANSION',
     date: '23 September 2026',
