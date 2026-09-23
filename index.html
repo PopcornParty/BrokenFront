@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1a1712" />
+  <meta name="description" content="Broken Front — an original cinematic single-player WWII-inspired first-person shooter for landscape phones." />
+  <title>BROKEN FRONT</title>
+  <link rel="icon" href="assets/ui/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="game-canvas"></canvas>
+    <div id="rotate-overlay" class="overlay hidden">
+      <div class="rotate-card">
+        <div class="rotate-icon">▭</div>
+        <h2>Turn your phone</h2>
+        <p>Broken Front is built for landscape play.</p>
+      </div>
+    </div>
+    <div id="boot-screen" class="overlay">
+      <div class="boot-mark">BF</div>
+      <p class="boot-line">LOADING FIELD MAPS</p>
+      <div class="boot-bar"><div id="boot-fill"></div></div>
+    </div>
+    <div id="menu-screen" class="overlay hidden">
+      <div class="menu-vignette"></div>
+      <div class="menu-content">
+        <p class="menu-kicker">A SOLDIER'S CAMPAIGN</p>
+        <h1 class="game-title">BROKEN<br/>FRONT</h1>
+        <p class="menu-tag">Survive the line. Complete the objective. Come home.</p>
+        <div class="menu-actions">
+          <button id="btn-continue" class="btn primary hidden">Continue</button>
+          <button id="btn-play" class="btn primary">New Campaign</button>
+          <button id="btn-settings" class="btn">Settings</button>
+          <button id="btn-credits" class="btn">Credits</button>
+        </div>
+        <p class="menu-hint">Landscape · Touch or Keyboard</p>
+      </div>
+    </div>
+    <div id="customize-screen" class="overlay hidden panel-screen">
+      <div class="panel">
+        <h2>Field Kit</h2>
+        <p class="panel-sub">You are one soldier. Keep it simple.</p>
+        <label>Name
+          <input id="soldier-name" maxlength="16" placeholder="Reed" />
+        </label>
+        <label>Kit colour
+          <select id="soldier-kit">
+            <option value="olive">Olive drab</option>
+            <option value="mud">Mud brown</option>
+            <option value="ash">Ash grey</option>
+            <option value="field">Field green</option>
+          </select>
+        </label>
+        <label>Difficulty
+          <select id="soldier-diff">
+            <option value="easy">Easy</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        <div class="row">
+          <button id="btn-customize-back" class="btn">Back</button>
+          <button id="btn-customize-go" class="btn primary">Deploy</button>
+        </div>
+      </div>
+    </div>
+    <div id="settings-screen" class="overlay hidden panel-screen">
+      <div class="panel scroll">
+        <h2>Settings</h2>
+        <label>Master volume <input id="set-master" type="range" min="0" max="100" value="80" /></label>
+        <label>Music volume <input id="set-music" type="range" min="0" max="100" value="35" /></label>
+        <label>SFX volume <input id="set-sfx" type="range" min="0" max="100" value="85" /></label>
+        <label>Look sensitivity <input id="set-sens" type="range" min="20" max="200" value="100" /></label>
+        <label>Graphics
+          <select id="set-gfx">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </label>
+        <label>Difficulty
+          <select id="set-diff">
+            <option value="easy">Easy</option>
+            <option value="normal">Normal</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        <label class="check"><input id="set-vib" type="checkbox" checked /> Vibration (if supported)</label>
+        <label class="check"><input id="set-swap" type="checkbox" /> Swap fire / look sides</label>
+        <div class="row">
+          <button id="btn-settings-back" class="btn primary">Done</button>
+        </div>
+      </div>
+    </div>
+    <div id="credits-screen" class="overlay hidden panel-screen">
+      <div class="panel scroll">
+        <h2>Credits</h2>
+        <p>Broken Front is an original fictional project. It is not affiliated with, endorsed by, or adapted from any film, studio, or commercial game.</p>
+        <p>Engine: Three.js (MIT). Audio: original procedural Web Audio. Art: original low-poly procedural geometry and canvas textures.</p>
+        <p>Story: one unnamed company on a fictional front. No real units, no copied scenes.</p>
+        <button id="btn-credits-back" class="btn primary">Back</button>
+      </div>
+    </div>
+    <div id="loading-screen" class="overlay hidden">
+      <div class="load-card">
+        <p class="load-kicker" id="load-kicker">NEXT OPERATION</p>
+        <h2 id="load-title">Mission</h2>
+        <p id="load-brief"></p>
+        <div class="boot-bar"><div id="load-fill"></div></div>
+      </div>
+    </div>
+    <div id="cutscene-screen" class="overlay hidden">
+      <div class="cine-bars"><span></span><span></span></div>
+      <p id="cine-text"></p>
+      <button id="btn-skip-cine" class="btn small">Skip</button>
+    </div>
+    <div id="hud" class="hidden">
+      <div id="crosshair">+</div>
+      <div id="hit-marker"></div>
+      <div id="damage-vignette"></div>
+      <div id="muzzle-flash"></div>
+      <div id="objective-box">
+        <span class="obj-label">OBJECTIVE</span>
+        <span id="objective-text">Reach safety</span>
+      </div>
+      <div id="radio-box" class="hidden"><span id="radio-text"></span></div>
+      <div id="interact-prompt" class="hidden">[ USE ]</div>
+      <div id="hud-bottom">
+        <div class="hud-block">
+          <span class="hud-label">HEALTH</span>
+          <div class="bar"><div id="health-fill"></div></div>
+        </div>
+        <div class="hud-block ammo">
+          <span id="weapon-name">RIFLE</span>
+          <span id="ammo-text">5 / 40</span>
+          <span id="grenade-text">G 2</span>
+        </div>
+      </div>
+    </div>
+    <div id="touch-layer" class="hidden">
+      <div id="joy-base"><div id="joy-knob"></div></div>
+      <div id="look-zone"></div>
+      <button class="touch-btn" id="btn-fire">FIRE</button>
+      <button class="touch-btn" id="btn-aim">AIM</button>
+      <button class="touch-btn small-btn" id="btn-reload">R</button>
+      <button class="touch-btn small-btn" id="btn-grenade">G</button>
+      <button class="touch-btn small-btn" id="btn-jump">▲</button>
+      <button class="touch-btn small-btn" id="btn-crouch">C</button>
+      <button class="touch-btn small-btn" id="btn-use">USE</button>
+      <button class="touch-btn small-btn" id="btn-pause">II</button>
+    </div>
+    <div id="pause-screen" class="overlay hidden panel-screen">
+      <div class="panel">
+        <h2>Paused</h2>
+        <button id="btn-resume" class="btn primary">Resume</button>
+        <button id="btn-restart-cp" class="btn">Restart checkpoint</button>
+        <button id="btn-pause-settings" class="btn">Settings</button>
+        <button id="btn-pause-menu" class="btn">Main menu</button>
+      </div>
+    </div>
+    <div id="end-screen" class="overlay hidden panel-screen">
+      <div class="panel">
+        <p class="menu-kicker">CAMPAIGN COMPLETE</p>
+        <h2 id="end-title">You held the line.</h2>
+        <p id="end-body">The company moves on. So do you.</p>
+        <button id="btn-end-menu" class="btn primary">Main menu</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
