@@ -21,6 +21,7 @@
 <body>
   <div id="app">
     <canvas id="game-canvas"></canvas>
+
     <div id="rotate-overlay" class="overlay hidden">
       <div class="rotate-card">
         <div class="rotate-icon">▭</div>
@@ -28,13 +29,18 @@
         <p>Broken Front is built for landscape play.</p>
       </div>
     </div>
+
     <div id="boot-screen" class="overlay">
       <div class="boot-mark">BF</div>
       <p class="boot-line">LOADING FIELD MAPS</p>
       <div class="boot-bar"><div id="boot-fill"></div></div>
     </div>
+
     <div id="menu-screen" class="overlay hidden">
       <div class="menu-vignette"></div>
+      <button id="btn-update-log" class="menu-log-btn" type="button">
+        Update Log <span id="log-new" class="log-dot hidden">NEW</span>
+      </button>
       <div class="menu-content">
         <p class="menu-kicker">A SOLDIER'S CAMPAIGN</p>
         <h1 class="game-title">BROKEN<br/>FRONT</h1>
@@ -45,9 +51,21 @@
           <button id="btn-settings" class="btn">Settings</button>
           <button id="btn-credits" class="btn">Credits</button>
         </div>
-        <p class="menu-hint">Landscape · Touch or Keyboard</p>
+        <p class="menu-hint">For the best experience, rotate your phone to landscape and enter fullscreen.</p>
+        <button id="btn-menu-fs" class="btn">Fullscreen</button>
+        <p id="menu-version" class="menu-version">v1.1.0</p>
       </div>
     </div>
+
+    <div id="changelog-screen" class="overlay hidden panel-screen">
+      <div class="panel scroll log-panel">
+        <p class="log-kicker">BROKEN FRONT</p>
+        <h2>UPDATE LOG</h2>
+        <div id="changelog-list"></div>
+        <button id="btn-log-back" class="btn primary">Back</button>
+      </div>
+    </div>
+
     <div id="customize-screen" class="overlay hidden panel-screen">
       <div class="panel">
         <h2>Field Kit</h2>
@@ -76,20 +94,30 @@
         </div>
       </div>
     </div>
+
     <div id="settings-screen" class="overlay hidden panel-screen">
       <div class="panel scroll">
         <h2>Settings</h2>
-        <label>Master volume <input id="set-master" type="range" min="0" max="100" value="80" /></label>
-        <label>Music volume <input id="set-music" type="range" min="0" max="100" value="35" /></label>
-        <label>SFX volume <input id="set-sfx" type="range" min="0" max="100" value="85" /></label>
-        <label>Look sensitivity <input id="set-sens" type="range" min="20" max="200" value="100" /></label>
-        <label>Graphics
+        <p class="set-sec">Graphics</p>
+        <label>Quality
           <select id="set-gfx">
             <option value="low">Low</option>
             <option value="medium" selected>Medium</option>
             <option value="high">High</option>
+            <option value="veryhigh">Very High</option>
           </select>
         </label>
+        <p class="set-sec">Audio</p>
+        <label>Master volume <input id="set-master" type="range" min="0" max="100" value="80" /></label>
+        <label>Music volume <input id="set-music" type="range" min="0" max="100" value="35" /></label>
+        <label>SFX volume <input id="set-sfx" type="range" min="0" max="100" value="85" /></label>
+        <p class="set-sec">Controls</p>
+        <label>Look sensitivity <input id="set-sens" type="range" min="20" max="200" value="100" /></label>
+        <label>Button opacity <input id="set-opacity" type="range" min="25" max="100" value="70" /></label>
+        <label class="check"><input id="set-swap" type="checkbox" /> Swap fire / look sides</label>
+        <label class="check"><input id="set-vib" type="checkbox" checked /> Vibration (if supported)</label>
+        <label class="check"><input id="set-cam" type="checkbox" checked /> Camera motion</label>
+        <p class="set-sec">Gameplay</p>
         <label>Difficulty
           <select id="set-diff">
             <option value="easy">Easy</option>
@@ -97,13 +125,12 @@
             <option value="hard">Hard</option>
           </select>
         </label>
-        <label class="check"><input id="set-vib" type="checkbox" checked /> Vibration (if supported)</label>
-        <label class="check"><input id="set-swap" type="checkbox" /> Swap fire / look sides</label>
         <div class="row">
           <button id="btn-settings-back" class="btn primary">Done</button>
         </div>
       </div>
     </div>
+
     <div id="credits-screen" class="overlay hidden panel-screen">
       <div class="panel scroll">
         <h2>Credits</h2>
@@ -113,6 +140,7 @@
         <button id="btn-credits-back" class="btn primary">Back</button>
       </div>
     </div>
+
     <div id="loading-screen" class="overlay hidden">
       <div class="load-card">
         <p class="load-kicker" id="load-kicker">NEXT OPERATION</p>
@@ -121,11 +149,13 @@
         <div class="boot-bar"><div id="load-fill"></div></div>
       </div>
     </div>
+
     <div id="cutscene-screen" class="overlay hidden">
       <div class="cine-bars"><span></span><span></span></div>
       <p id="cine-text"></p>
       <button id="btn-skip-cine" class="btn small">Skip</button>
     </div>
+
     <div id="hud" class="hidden">
       <div id="crosshair">+</div>
       <div id="hit-marker"></div>
@@ -134,6 +164,8 @@
       <div id="objective-box">
         <span class="obj-label">OBJECTIVE</span>
         <span id="objective-text">Reach safety</span>
+        <span id="objective-hint"></span>
+        <span id="objective-nav" class="hidden"><span id="obj-arrow">↑</span><span id="obj-dist">0m</span></span>
       </div>
       <div id="radio-box" class="hidden"><span id="radio-text"></span></div>
       <div id="interact-prompt" class="hidden">[ USE ]</div>
@@ -149,18 +181,21 @@
         </div>
       </div>
     </div>
+
     <div id="touch-layer" class="hidden">
       <div id="joy-base"><div id="joy-knob"></div></div>
       <div id="look-zone"></div>
-      <button class="touch-btn" id="btn-fire">FIRE</button>
-      <button class="touch-btn" id="btn-aim">AIM</button>
-      <button class="touch-btn small-btn" id="btn-reload">R</button>
-      <button class="touch-btn small-btn" id="btn-grenade">G</button>
-      <button class="touch-btn small-btn" id="btn-jump">▲</button>
-      <button class="touch-btn small-btn" id="btn-crouch">C</button>
-      <button class="touch-btn small-btn" id="btn-use">USE</button>
-      <button class="touch-btn small-btn" id="btn-pause">II</button>
+      <button class="touch-btn fire" id="btn-fire" aria-label="Fire"><i></i></button>
+      <button class="touch-btn aim" id="btn-aim" aria-label="Aim"><i></i></button>
+      <button class="touch-btn small-btn reload" id="btn-reload" aria-label="Reload"><i></i></button>
+      <button class="touch-btn small-btn nade" id="btn-grenade" aria-label="Grenade"><i></i></button>
+      <button class="touch-btn small-btn jump" id="btn-jump" aria-label="Jump"><i></i></button>
+      <button class="touch-btn small-btn crouch" id="btn-crouch" aria-label="Crouch"><i></i></button>
+      <button class="touch-btn small-btn use" id="btn-use" aria-label="Use"><i></i></button>
+      <button class="touch-btn small-btn pause" id="btn-pause" aria-label="Pause"><i></i></button>
+      <button class="touch-btn small-btn fs" id="btn-hud-fs" aria-label="Fullscreen"><i></i></button>
     </div>
+
     <div id="pause-screen" class="overlay hidden panel-screen">
       <div class="panel">
         <h2>Paused</h2>
@@ -170,6 +205,7 @@
         <button id="btn-pause-menu" class="btn">Main menu</button>
       </div>
     </div>
+
     <div id="end-screen" class="overlay hidden panel-screen">
       <div class="panel">
         <p class="menu-kicker">CAMPAIGN COMPLETE</p>
