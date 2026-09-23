@@ -1,4 +1,4 @@
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';
 export const SAVE_KEY = 'brokenfront-save-v1';
 
 export const DIFFICULTY = {

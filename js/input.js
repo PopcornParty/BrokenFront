@@ -20,7 +20,7 @@ export class Input {
     this.joy = { active: false, id: null, cx: 0, cy: 0, dx: 0, dy: 0 };
     this.look = { active: false, id: null, lx: 0, ly: 0 };
     this.sens = 1;
-    this.enabled = false;
+    this.enabled = true;
     this.attached = false;
   }
 
@@ -34,7 +34,8 @@ export class Input {
     const canvas = document.getElementById('game-canvas');
     this.canvas = canvas;
     const onDown = (e) => {
-      if (!this.enabled || this.isTouch) return;
+      if (this.isTouch) return;
+      this.enabled = true;
       this.capturePointer();
       if (e.button === 0) this.fire = true;
       if (e.button === 2) this.aim = true;
@@ -51,7 +52,6 @@ export class Input {
     look.addEventListener('mouseup', onUp);
     look.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('mousemove', (e) => {
-      if (!this.enabled) return;
       if (document.pointerLockElement !== canvas) return;
       this.lookAccumX += e.movementX;
       this.lookAccumY += e.movementY;
@@ -99,7 +99,7 @@ export class Input {
     map.forEach(([id, key]) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const down = (e) => { e.preventDefault(); if (this.enabled) this[key] = true; };
+      const down = (e) => { e.preventDefault(); this[key] = true; };
       const hold = key === 'fire' || key === 'aim' || key === 'crouch' || key === 'sprint';
       const up = (e) => { e.preventDefault(); if (hold) this[key] = false; };
       el.addEventListener('touchstart', down, { passive: false });
@@ -111,7 +111,7 @@ export class Input {
 
     joy.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      if (!this.enabled) return;
+      this.enabled = true;
       const t = e.changedTouches[0];
       const r = joy.getBoundingClientRect();
       this.joy.active = true; this.joy.id = t.identifier;
@@ -121,14 +121,13 @@ export class Input {
 
     look.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      if (!this.enabled) return;
+      this.enabled = true;
       const t = e.changedTouches[0];
       this.look.active = true; this.look.id = t.identifier;
       this.look.lx = t.clientX; this.look.ly = t.clientY;
     }, { passive: false });
 
     window.addEventListener('touchmove', (e) => {
-      if (!this.enabled) return;
       for (const t of e.changedTouches) {
         if (this.joy.active && t.identifier === this.joy.id) this.updateJoy(t.clientX, t.clientY);
         if (this.look.active && t.identifier === this.look.id) {
@@ -165,7 +164,6 @@ export class Input {
   }
 
   onKey(e, down) {
-    if (!this.enabled && !(down && e.code === 'Escape')) return;
     this.keys[e.code] = down;
     if (e.code === 'KeyR' && down) this.reload = true;
     if (e.code === 'KeyG' && down) this.grenade = true;
