@@ -155,9 +155,12 @@ export class World {
 
   ruin(x, z, w = 7, d = 6.5, h = 3.6) {
     const gy = this.heightAt(x, z);
-    this.meshBox(x, gy + h * 0.42, z - d * 0.35, w, h * 0.84, 0.5, this.mats.brick);
-    this.meshBox(x - w * 0.42, gy + h * 0.38, z, 0.5, h * 0.76, d * 0.7, this.mats.brick);
-    this.meshBox(x + w * 0.2, gy + 0.28, z + 0.8, 1.6, 0.55, 1.2, this.mats.brick, { low: true });
+    this.meshBox(x, gy + h * 0.5, z - d * 0.38, w, h, 0.85, this.mats.brick);
+    this.meshBox(x - w * 0.45, gy + h * 0.48, z, 0.85, h * 0.96, d * 0.8, this.mats.brick);
+    this.meshBox(x + w * 0.45, gy + h * 0.28, z + 0.2, 0.7, h * 0.56, d * 0.45, this.mats.brick);
+    this.meshBox(x, gy + h + 0.08, z - 0.4, w + 0.4, 0.22, d * 0.55, this.mats.dark);
+    this.meshBox(x + 0.8, gy + 0.32, z + 0.7, 1.8, 0.64, 1.4, this.mats.brick, { low: true });
+    this.meshBox(x - 1.1, gy + 0.18, z + 0.2, 2.2, 0.36, 1.6, this.mats.conc, { low: true });
   }
 
   wreck(x, z) {
@@ -190,6 +193,8 @@ export class World {
     this.rock(-6, -6, 1.3); this.rock(6, -16, 1.15); this.rock(-6, -48, 1.4);
     this.rock(5, -28, 1.1); this.rock(-3, -72, 1.2);
     this.wreck(3, -74);
+    this.meshBox(6, this.heightAt(6, -52) + 0.5, -52, 6, 1.0, 1.3, this.mats.sand, { low: true });
+    this.meshBox(-6, this.heightAt(-6, -70) + 0.5, -70, 6, 1.0, 1.3, this.mats.sand, { low: true });
     if (theme === 'town' || theme === 'final' || theme === 'bunker' || theme === 'outskirts' || theme === 'townedge' || theme === 'approach') {
       this.ruin(-7, -80, 7, 6.5, 4.2);
       this.ruin(7, -86, 7, 6.5, 4);
@@ -217,19 +222,38 @@ export class World {
     }
   }
 
+  rayHitsBox(ox, oy, oz, dx, dy, dz, len, min, max) {
+    const pad = 0.12;
+    const bminx = min.x - pad, bmaxx = max.x + pad;
+    const bminy = min.y - pad, bmaxy = max.y + pad;
+    const bminz = min.z - pad, bmaxz = max.z + pad;
+    let tmin = 0;
+    let tmax = len;
+    const axes = [[ox, dx, bminx, bmaxx], [oy, dy, bminy, bmaxy], [oz, dz, bminz, bmaxz]];
+    for (const [o, d, mn, mx] of axes) {
+      if (Math.abs(d) < 1e-6) {
+        if (o < mn || o > mx) return false;
+        continue;
+      }
+      const inv = 1 / d;
+      let t0 = (mn - o) * inv;
+      let t1 = (mx - o) * inv;
+      if (t0 > t1) { const tmp = t0; t0 = t1; t1 = tmp; }
+      tmin = Math.max(tmin, t0);
+      tmax = Math.min(tmax, t1);
+      if (tmax < tmin) return false;
+    }
+    return tmax > 0.18 && tmin < len - 0.18;
+  }
+
   blockedLOS(from, to) {
     const dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
     const len = Math.hypot(dx, dy, dz);
     if (len < 0.4) return false;
-    const steps = Math.min(28, Math.max(8, Math.floor(len / 0.6)));
-    for (let i = 1; i < steps; i++) {
-      const t = i / steps;
-      const px = from.x + dx * t, py = from.y + dy * t, pz = from.z + dz * t;
-      for (const c of this.colliders) {
-        if (!c.los) continue;
-        if (c.low && py > c.max.y + 0.15) continue;
-        if (px >= c.min.x && px <= c.max.x && py >= c.min.y && py <= c.max.y && pz >= c.min.z && pz <= c.max.z) return true;
-      }
+    for (const c of this.colliders) {
+      if (!c.los) continue;
+      if (c.low && from.y > c.max.y + 0.25 && to.y > c.max.y + 0.25) continue;
+      if (this.rayHitsBox(from.x, from.y, from.z, dx, dy, dz, len, c.min, c.max)) return true;
     }
     return false;
   }
