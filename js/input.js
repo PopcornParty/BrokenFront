@@ -86,6 +86,8 @@ export class Input {
     this.look.active = false;
     const knob = document.getElementById('joy-knob');
     if (knob) knob.style.transform = '';
+    const aimBtn = document.getElementById('btn-aim');
+    if (aimBtn) aimBtn.classList.remove('on');
   }
 
   bindTouch() {
@@ -99,8 +101,15 @@ export class Input {
     map.forEach(([id, key]) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const down = (e) => { e.preventDefault(); this[key] = true; };
-      const hold = key === 'fire' || key === 'aim' || key === 'crouch' || key === 'sprint';
+      const toggle = key === 'aim';
+      const hold = key === 'fire' || key === 'crouch' || key === 'sprint';
+      const down = (e) => {
+        e.preventDefault();
+        if (toggle) {
+          this[key] = !this[key];
+          el.classList.toggle('on', this[key]);
+        } else this[key] = true;
+      };
       const up = (e) => { e.preventDefault(); if (hold) this[key] = false; };
       el.addEventListener('touchstart', down, { passive: false });
       el.addEventListener('touchend', up, { passive: false });
