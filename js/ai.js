@@ -32,19 +32,26 @@ export class Enemy {
     this.cool = Math.max(0, this.cool - dt);
     this.hitFlash = Math.max(0, this.hitFlash - dt);
     if (this.wakeDelay > 0) this.wakeDelay -= dt;
-    const eye = this.pos.clone(); eye.y = 1.45;
+
+    const eye = this.pos.clone(); eye.y = this.pos.y + 1.45;
     const target = player.pos.clone();
+    target.y = (player.pos.y || 1.6) - 0.15;
     const toP = new THREE.Vector3().subVectors(target, eye);
     const dist = toP.length();
-    const inRange = dist < 42 && Math.abs(toP.y) < 8;
+    const inRange = dist < 36 && Math.abs(toP.y) < 6;
     this.hasLos = false;
-    if (inRange && this.wakeDelay <= 0) this.hasLos = !world.blockedLOS(eye, target);
+    if (inRange && this.wakeDelay <= 0) {
+      this.hasLos = !world.blockedLOS(eye, target);
+    }
+
     if (this.hasLos) this.alert = 4;
     else this.alert = Math.max(0, this.alert - dt);
+
     if (this.hp < this.maxHp * 0.28 && dist < 14) this.state = 'retreat';
     else if (this.alert > 0 && dist < 16 && this.hasLos) this.state = 'flank';
     else if (this.alert > 0) this.state = 'cover';
     else this.state = 'patrol';
+
     let dest = this.home;
     if (this.state === 'cover') dest = this.cover;
     if (this.state === 'flank') {
@@ -67,16 +74,22 @@ export class Enemy {
         world.collide(this.pos, 0.45);
       }
     }
+
     this.pos.y = world.heightAt(this.pos.x, this.pos.z);
     if (this.hasLos) this.yaw = Math.atan2(toP.x, toP.z);
     else this.yaw += (this.dir * 0.4 - this.yaw) * 0.02;
     this.mesh.rotation.y = this.yaw;
     this.mesh.position.y = this.pos.y + Math.sin(this.t * 6) * (this.state === 'patrol' ? 0.03 : 0.01);
+
     let shot = null;
-    if (this.hasLos && this.cool <= 0 && dist < 38) {
-      this.cool = 0.85 + Math.random() * 0.9;
-      const miss = Math.random() > this.acc + Math.min(0.15, (38 - dist) * 0.003);
-      shot = { from: eye.clone(), toward: target.clone(), hit: !miss, dmg: 8 + Math.random() * 6 };
+    if (this.hasLos && this.cool <= 0 && dist < 34) {
+      this.cool = 0.9 + Math.random() * 1.0;
+      if (world.blockedLOS(eye, target)) {
+        this.hasLos = false;
+      } else {
+        const miss = Math.random() > this.acc + Math.min(0.15, (34 - dist) * 0.003);
+        shot = { from: eye.clone(), toward: target.clone(), hit: !miss, dmg: 8 + Math.random() * 6 };
+      }
     }
     return shot;
   }
@@ -106,7 +119,9 @@ export class EnemyManager {
     this.acc = acc;
     this.units = list.map((s) => new Enemy(scene, s, hp, acc));
   }
+
   living() { return this.units.filter((u) => u.alive); }
+
   update(dt, player, world) {
     const shots = [];
     for (const u of this.units) {
@@ -116,6 +131,7 @@ export class EnemyManager {
     }
     return shots;
   }
+
   spawn(n, z) {
     for (let i = 0; i < n; i++) {
       if (this.living().length >= 8) return;
@@ -123,10 +139,12 @@ export class EnemyManager {
       this.units.push(new Enemy(this.scene, spec, this.hp, this.acc));
     }
   }
+
   dispose() {
     this.units.forEach((u) => { if (u.mesh && u.mesh.parent) u.mesh.parent.remove(u.mesh); });
     this.units = [];
   }
+
   rayHit(origin, dir, range = 80, world = null) {
     let best = null, bestD = range;
     for (const u of this.living()) {
