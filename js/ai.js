@@ -32,25 +32,19 @@ export class Enemy {
     this.cool = Math.max(0, this.cool - dt);
     this.hitFlash = Math.max(0, this.hitFlash - dt);
     if (this.wakeDelay > 0) this.wakeDelay -= dt;
-
     const eye = this.pos.clone(); eye.y = 1.45;
     const target = player.pos.clone();
     const toP = new THREE.Vector3().subVectors(target, eye);
     const dist = toP.length();
     const inRange = dist < 42 && Math.abs(toP.y) < 8;
     this.hasLos = false;
-    if (inRange && this.wakeDelay <= 0) {
-      this.hasLos = !world.blockedLOS(eye, target);
-    }
-
+    if (inRange && this.wakeDelay <= 0) this.hasLos = !world.blockedLOS(eye, target);
     if (this.hasLos) this.alert = 4;
     else this.alert = Math.max(0, this.alert - dt);
-
     if (this.hp < this.maxHp * 0.28 && dist < 14) this.state = 'retreat';
     else if (this.alert > 0 && dist < 16 && this.hasLos) this.state = 'flank';
     else if (this.alert > 0) this.state = 'cover';
     else this.state = 'patrol';
-
     let dest = this.home;
     if (this.state === 'cover') dest = this.cover;
     if (this.state === 'flank') {
@@ -73,13 +67,11 @@ export class Enemy {
         world.collide(this.pos, 0.45);
       }
     }
-
     this.pos.y = world.heightAt(this.pos.x, this.pos.z);
     if (this.hasLos) this.yaw = Math.atan2(toP.x, toP.z);
     else this.yaw += (this.dir * 0.4 - this.yaw) * 0.02;
     this.mesh.rotation.y = this.yaw;
     this.mesh.position.y = this.pos.y + Math.sin(this.t * 6) * (this.state === 'patrol' ? 0.03 : 0.01);
-
     let shot = null;
     if (this.hasLos && this.cool <= 0 && dist < 38) {
       this.cool = 0.85 + Math.random() * 0.9;
@@ -114,9 +106,7 @@ export class EnemyManager {
     this.acc = acc;
     this.units = list.map((s) => new Enemy(scene, s, hp, acc));
   }
-
   living() { return this.units.filter((u) => u.alive); }
-
   update(dt, player, world) {
     const shots = [];
     for (const u of this.units) {
@@ -126,7 +116,6 @@ export class EnemyManager {
     }
     return shots;
   }
-
   spawn(n, z) {
     for (let i = 0; i < n; i++) {
       if (this.living().length >= 8) return;
@@ -134,7 +123,10 @@ export class EnemyManager {
       this.units.push(new Enemy(this.scene, spec, this.hp, this.acc));
     }
   }
-
+  dispose() {
+    this.units.forEach((u) => { if (u.mesh && u.mesh.parent) u.mesh.parent.remove(u.mesh); });
+    this.units = [];
+  }
   rayHit(origin, dir, range = 80, world = null) {
     let best = null, bestD = range;
     for (const u of this.living()) {
