@@ -37,10 +37,14 @@ export class Game {
     this.scene.fog = new THREE.Fog(0x6d6758, 18, 120);
     this.camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.08, 220);
     this.weaponCam = this.camera;
-    this.hemi = new THREE.HemisphereLight(0xc9c2a8, 0x3a3224, 1.05);
-    this.sun = new THREE.DirectionalLight(0xe8dcb0, 0.85);
-    this.sun.position.set(30, 50, 10);
-    this.scene.add(this.hemi, this.sun);
+    this.hemi = new THREE.HemisphereLight(0xc9c2b0, 0x3d3428, 0.95);
+    this.sun = new THREE.DirectionalLight(0xf0ddb0, 1.15);
+    this.sun.position.set(38, 62, 18);
+    this.fill = new THREE.DirectionalLight(0x8a9aaa, 0.18);
+    this.fill.position.set(-40, 20, -10);
+    this.scene.add(this.hemi, this.sun, this.fill);
+    this.bob = 0;
+    this.landAmt = 0;
     this.player = { pos: new THREE.Vector3(0, 1.7, 0), vel: new THREE.Vector3(), yaw: 0, pitch: 0, hp: 100, maxHp: 100, lastHurt: 0, grounded: true, crouched: false, height: 1.7 };
     this.weapon = { ...WEAPONS.rifle, magLeft: WEAPONS.rifle.mag, reserve: WEAPONS.rifle.reserve, cool: 0, reloading: 0, ads: 0 };
     this.pistol = { ...WEAPONS.pistol, magLeft: WEAPONS.pistol.mag, reserve: WEAPONS.pistol.reserve };
@@ -53,22 +57,43 @@ export class Game {
     this.loop = this.loop.bind(this);
     window.addEventListener('resize', () => this.resize());
   }
+
   applyGfx() {
     const g = GFX[this.save.settings.graphics] || GFX.medium;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, g.pixelRatio));
-    this.scene.fog.far = g.fogFar;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, g.pixelRatio));
+    this.renderer.toneMappingExposure = g.shadows ? 1.08 : 1.02;
+    this.renderer.shadowMap.enabled = !!g.shadows;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.sun.castShadow = !!g.shadows;
+    if (g.shadows) {
+      this.sun.shadow.mapSize.set(1024, 1024);
+      this.sun.shadow.camera.near = 2;
+      this.sun.shadow.camera.far = 140;
+      this.sun.shadow.camera.left = -40;
+      this.sun.shadow.camera.right = 40;
+      this.sun.shadow.camera.top = 40;
+      this.sun.shadow.camera.bottom = -40;
+    }
     this.gfx = g;
   }
+
   startMission(id, checkpoint = 0) {
     this.applyGfx();
     if (this.world) this.world.dispose();
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x6d6758);
-    this.scene.fog = new THREE.Fog(0x6d6758, 18, this.gfx.fogFar);
-    this.scene.add(this.hemi, this.sun);
+    const fogCol = 0xb0a78c;
+    this.scene.background = new THREE.Color(0xb5ab90);
+    this.scene.fog = new THREE.Fog(fogCol, this.gfx.fogNear || 16, this.gfx.fogFar);
+    this.scene.add(this.hemi, this.sun, this.fill);
     this.mission = missionById(id);
     this.world = new World(this.scene, this.mission.theme, this.gfx);
-    const diff = DIFFICULTY[this.save.settings.difficulty] || DIFFICULTY.normal;
+    const diff = { ...(DIFFICULTY[this.save.settings.difficulty] || DIFFICULTY.normal) };
+    if (id === 1) {
+      diff.playerHp += 30;
+      diff.dmgTaken *= 0.72;
+      diff.enemyAcc *= 0.45;
+      diff.ammoMul *= 1.35;
+    }
     this.diff = diff;
     this.player.maxHp = diff.playerHp;
     this.player.hp = diff.playerHp;
@@ -95,11 +120,12 @@ export class Game {
     this.running = true;
     this.paused = false;
     this.clock.getDelta();
-    this.ui.setObjective(this.currentObj().text);
+    this.ui.setObjective(this.currentObj());
     this.ui.showHud(true);
     this.resize();
     if (!this._raf) this._raf = requestAnimationFrame(this.loop);
   }
+
   spawnPickups() {
     this.pickups = (this.mission.pickups || []).map((p) => {
       const color = p.type === 'med' ? 0x6a8a5a : p.type === 'grenade' ? 0x4a5530 : p.type === 'ammo' ? 0x3a3428 : 0x2a2418;
@@ -109,6 +135,7 @@ export class Game {
       return { ...p, mesh, taken: false };
     });
   }
+
   buildViewmodel() {
     while (this.camera.children.length) this.camera.remove(this.camera.children[0]);
     this.viewmodel = new THREE.Group();
@@ -123,9 +150,11 @@ export class Game {
     this.camera.add(this.viewmodel);
     this.scene.add(this.camera);
   }
+
   currentObj() {
     return this.mission.objectives[Math.min(this.objIndex, this.mission.objectives.length - 1)];
   }
+
   loop() {
     this._raf = requestAnimationFrame(this.loop);
     const dt = Math.min(0.05, this.clock.getDelta());
@@ -134,6 +163,7 @@ export class Game {
     this.update(dt);
     this.renderer.render(this.scene, this.camera);
   }
+
   update(dt) {
     this.missionTime += dt;
     Audio.tickMusic(dt);
@@ -146,14 +176,16 @@ export class Game {
     this.updateTracers(dt);
     const shots = this.enemies.update(dt, this.player, this.world);
     shots.forEach((s) => { this.addTracer(s.from, s.toward); if (s.hit) this.hurt(s.dmg); });
-    this.world.update(this.missionTime);
+    this.world.update(this.missionTime, this.camera);
     this.updateCamera(dt);
+    this.updateObjectiveNav();
     this.updateRadio();
     this.updateEvents();
     this.regen(dt);
     this.ui.sync(this);
     if (this.player.hp <= 0) this.onDeath();
   }
+
   handleInput(dt) {
     if (this.input.pulse('pause')) { this.ui.pause(true); this.paused = true; return; }
     const look = this.input.consumeLook((this.save.settings.sensitivity / 100) * (this.weapon.ads > 0.5 ? 0.55 : 1));
@@ -169,6 +201,7 @@ export class Game {
     if (this.input.fire) this.tryFire();
     if (this.input.pulse('use')) this.tryUse();
   }
+
   movePlayer(dt) {
     const mv = this.input.sampleMove();
     const speed = (this.player.crouched ? 2.3 : this.input.sprint ? 6.4 : 4.2);
@@ -183,12 +216,20 @@ export class Game {
     this.player.height = THREE.MathUtils.lerp(this.player.height, stand, 8 * dt);
     if (this.player.pos.y < this.player.height) { this.player.pos.y = this.player.height; this.player.vel.y = 0; this.player.grounded = true; }
     this.world.collide(this.player.pos, 0.38);
+    const ground = this.world.heightAt(this.player.pos.x, this.player.pos.z) + this.player.height;
+    if (this.player.pos.y < ground) {
+      if (!this.player.grounded && this.player.vel.y < -2) this.landAmt = 0.08;
+      this.player.pos.y = ground;
+      this.player.vel.y = 0;
+      this.player.grounded = true;
+    }
     if ((Math.abs(mv.x) + Math.abs(mv.y)) > 0.2 && this.player.grounded) {
       if (!this._stepT) this._stepT = 0;
       this._stepT += dt;
       if (this._stepT > 0.42) { Audio.sfxStep(); this._stepT = 0; }
     }
   }
+
   updateWeapon(dt) {
     this.weapon.cool = Math.max(0, this.weapon.cool - dt);
     if (this.weapon.reloading > 0) {
@@ -207,6 +248,7 @@ export class Game {
       this.viewmodel.visible = true;
     }
   }
+
   tryFire() {
     if (this.weapon.reloading > 0 || this.weapon.cool > 0) return;
     if (this.weapon.magLeft <= 0) { this.startReload(); return; }
@@ -225,7 +267,7 @@ export class Game {
     dir.normalize();
     const end = origin.clone().addScaledVector(dir, 70);
     this.addTracer(origin, end);
-    const hit = this.enemies.rayHit(origin, dir, 80);
+    const hit = this.enemies.rayHit(origin, dir, 80, this.world);
     if (hit) {
       const dead = hit.unit.damage(this.weapon.dmg);
       Audio.sfxHit();
@@ -234,11 +276,13 @@ export class Game {
     }
     if (!this.weapon.auto) this.input.fire = this.input.isTouch ? this.input.fire : false;
   }
+
   startReload() {
     if (this.weapon.reloading > 0 || this.weapon.magLeft >= this.weapon.mag || this.weapon.reserve <= 0) return;
     this.weapon.reloading = this.weapon.reload;
     Audio.sfxReload();
   }
+
   throwGrenade() {
     if (this.nadeCount <= 0) return;
     this.nadeCount -= 1;
@@ -249,6 +293,7 @@ export class Game {
     this.scene.add(mesh);
     this.grenades.push({ mesh, vel: dir.multiplyScalar(14).add(new THREE.Vector3(0, 3.5, 0)), life: 1.35 });
   }
+
   updateGrenades(dt) {
     this.grenades = this.grenades.filter((g) => {
       g.vel.y -= 16 * dt;
@@ -268,12 +313,14 @@ export class Game {
       return true;
     });
   }
+
   addTracer(from, to) {
     const geo = new THREE.BufferGeometry().setFromPoints([from, to]);
     const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xe8d7a0, transparent: true, opacity: 0.55 }));
     this.scene.add(line);
     this.tracers.push({ line, life: 0.08 });
   }
+
   updateTracers(dt) {
     this.tracers = this.tracers.filter((t) => {
       t.life -= dt;
@@ -281,6 +328,7 @@ export class Game {
       return true;
     });
   }
+
   updatePickups() {
     this.pickups.forEach((p) => {
       if (p.taken) return;
@@ -289,6 +337,7 @@ export class Game {
       if (this.player.pos.distanceTo(p.mesh.position) < 1.6) this.takePickup(p);
     });
   }
+
   takePickup(p) {
     p.taken = true;
     this.scene.remove(p.mesh);
@@ -302,6 +351,7 @@ export class Game {
     }
     this.ui.toast('Picked up ' + p.type.toUpperCase());
   }
+
   tryUse() {
     const obj = this.currentObj();
     if (obj.type === 'interact') {
@@ -309,6 +359,7 @@ export class Game {
       if (d < obj.r) this.advanceObj();
     }
   }
+
   updateObjectives(dt) {
     const obj = this.currentObj();
     if (!obj) return;
@@ -329,6 +380,7 @@ export class Game {
       this.ui.prompt(this.player.pos.distanceTo(t) < obj.r + 1.5);
     }
   }
+
   advanceObj() {
     this.objIndex += 1;
     this.objTimer = 0;
@@ -338,9 +390,10 @@ export class Game {
     this.save.hasProgress = true;
     this.ui.persist(this.save);
     if (this.objIndex >= this.mission.objectives.length) { this.completeMission(); return; }
-    this.ui.setObjective(this.currentObj().text);
+    this.ui.setObjective(this.currentObj());
     Audio.sfxUI();
   }
+
   completeMission() {
     if (this.mission.id >= 7) {
       this.running = false;
@@ -356,6 +409,7 @@ export class Game {
     this.ui.persist(this.save);
     this.ui.nextMission(this.save.mission);
   }
+
   updateRadio() {
     (this.mission.radio || []).forEach((r, i) => {
       if (this.missionTime >= r.t && !this.radioShown.has(i)) {
@@ -365,6 +419,7 @@ export class Game {
       }
     });
   }
+
   updateEvents() {
     (this.mission.events || []).forEach((e, i) => {
       if (this.missionTime >= e.t && !this.eventFired.has(i)) {
@@ -380,6 +435,7 @@ export class Game {
       }
     });
   }
+
   hurt(raw) {
     const dmg = raw * this.diff.dmgTaken;
     this.player.hp = Math.max(0, this.player.hp - dmg);
@@ -389,21 +445,45 @@ export class Game {
     this.ui.damageFlash(this.player.hp / this.player.maxHp);
     if (this.save.settings.vibration && navigator.vibrate) navigator.vibrate(30);
   }
+
   regen(dt) {
     if (this.missionTime - this.player.lastHurt > 4 && this.player.hp > 0) {
       this.player.hp = Math.min(this.player.maxHp, this.player.hp + 8 * dt);
     }
   }
+
   updateCamera(dt) {
+    const fxOn = this.save.settings.cameraShake !== false;
     this.shake = Math.max(0, this.shake - dt);
-    const s = this.shake * (Math.random() - 0.5);
+    this.landAmt = Math.max(0, this.landAmt - dt);
+    const mv = this.input.sampleMove();
+    const moving = Math.hypot(mv.x, mv.y);
+    this.bob += dt * (this.input.sprint ? 10 : 7) * moving;
+    const bobY = fxOn && this.player.grounded ? Math.sin(this.bob) * 0.035 * moving : 0;
+    const bobX = fxOn && this.player.grounded ? Math.sin(this.bob * 0.5) * 0.02 * moving : 0;
+    const s = fxOn ? this.shake * (Math.random() - 0.5) : 0;
+    const land = fxOn ? this.landAmt * 0.6 : 0;
     this.camera.position.copy(this.player.pos);
-    this.camera.position.x += s * 0.4;
-    this.camera.position.y += s * 0.3;
-    this.camera.rotation.set(this.player.pitch, this.player.yaw, 0, 'YXZ');
+    this.camera.position.x += s * 0.35 + bobX;
+    this.camera.position.y += s * 0.22 + bobY - land;
+    this.camera.rotation.set(this.player.pitch - land * 0.4, this.player.yaw, bobX * 0.15, 'YXZ');
     this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, this.weapon.ads > 0.5 ? 52 : 72, 8 * dt);
     this.camera.updateProjectionMatrix();
   }
+
+  updateObjectiveNav() {
+    const obj = this.currentObj();
+    if (!obj || !obj.pos) { this.ui.nav(null); return; }
+    const tx = obj.pos[0] - this.player.pos.x;
+    const tz = obj.pos[2] - this.player.pos.z;
+    const dist = Math.hypot(tx, tz);
+    const bearing = Math.atan2(-tx, -tz);
+    let diff = bearing - this.player.yaw;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    this.ui.nav({ dist, angle: diff });
+  }
+
   onDeath() {
     this.player.hp = this.player.maxHp;
     this.player.pos.set(...this.mission.spawn);
@@ -411,6 +491,7 @@ export class Game {
     this.ui.toast('You drop. The line pulls you back to the last mark.');
     this.objTimer = 0;
   }
+
   resize() {
     const w = window.innerWidth, h = window.innerHeight;
     this.camera.aspect = w / h;
