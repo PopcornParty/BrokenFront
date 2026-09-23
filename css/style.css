@@ -36,7 +36,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0c0b08; col
 }
 .menu-tag { opacity: .82; margin: 0 0 22px; }
 .menu-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-.menu-hint { margin: 16px auto 8px; max-width: 360px; font-size: 12px; letter-spacing: .04em; opacity: .62; line-height: 1.4; }
+.menu-hint { margin: 16px auto 8px; max-width: 420px; font-size: 12px; letter-spacing: .04em; opacity: .62; line-height: 1.4; }
 .menu-version { margin: 14px 0 0; letter-spacing: .28em; font-size: 11px; color: var(--brass); opacity: .85; }
 .menu-log-btn {
   position: absolute; top: 12px; right: 14px; z-index: 3;
@@ -141,6 +141,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0c0b08; col
 #hud-bottom {
   position: absolute; left: 12px; right: 12px; bottom: calc(12px + var(--safe));
   display: flex; justify-content: space-between; align-items: flex-end;
+  pointer-events: none;
 }
 .hud-block { background: var(--hud); padding: 8px 10px; min-width: 140px; }
 .hud-label { font-size: 9px; letter-spacing: .2em; color: var(--brass); }
@@ -151,46 +152,51 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0c0b08; col
 #ammo-text { font-size: 20px; }
 #grenade-text { display: block; font-size: 11px; opacity: .8; }
 #touch-layer { position: fixed; inset: 0; z-index: 9; pointer-events: none; }
+#move-zone {
+  position: absolute; left: 0; bottom: 0; width: 42%; height: 58%;
+  pointer-events: auto;
+}
 #joy-base {
-  position: absolute; left: 28px; bottom: calc(26px + var(--safe));
-  width: 132px; height: 132px; border-radius: 50%;
+  position: absolute; left: 22px; bottom: calc(22px + var(--safe));
+  width: 140px; height: 140px; border-radius: 50%;
   background: rgba(16,13,9, calc(var(--btn-a) * 0.45));
   border: 2px solid rgba(228,214,180, calc(var(--btn-a) * 0.45));
   pointer-events: auto;
+  z-index: 2;
 }
 #joy-knob {
   position: absolute; left: 50%; top: 50%; width: 54px; height: 54px; margin: -27px 0 0 -27px;
   border-radius: 50%; background: rgba(228,214,180, calc(var(--btn-a) * 0.55));
 }
-#look-zone { position: absolute; right: 0; top: 0; width: 58%; height: 100%; pointer-events: auto; }
+#look-zone {
+  position: absolute; right: 0; top: 0; width: 52%; height: 62%;
+  pointer-events: auto;
+}
 .touch-btn {
-  position: absolute; pointer-events: auto;
+  position: absolute; pointer-events: auto; z-index: 3;
   width: 70px; height: 70px; border-radius: 50%;
   border: 1px solid rgba(196,164,106, calc(var(--btn-a) * 0.75));
-  background: rgba(16,13,9, calc(var(--btn-a) * 0.55));
+  background: rgba(16,13,9, calc(var(--btn-a) * 0.62));
   color: var(--paper);
 }
 .touch-btn:active { filter: brightness(1.35); transform: scale(0.96); }
-.touch-btn.small-btn { width: 46px; height: 46px; }
-.touch-btn i { display: block; width: 18px; height: 18px; margin: 0 auto; background: currentColor; }
-.touch-btn.fire { right: 20px; bottom: calc(24px + var(--safe)); width: 88px; height: 88px; }
-.touch-btn.fire i { width: 22px; height: 22px; border-radius: 50%; background: #d7b56a; box-shadow: 0 0 10px #d7b56a; }
-.touch-btn.aim { right: 116px; bottom: calc(28px + var(--safe)); }
-.touch-btn.aim i { background: transparent; border: 2px solid var(--paper); border-radius: 50%; width: 16px; height: 16px; }
-.touch-btn.reload { right: 22px; bottom: calc(122px + var(--safe)); }
-.touch-btn.reload i { width: 14px; height: 14px; border: 2px solid var(--paper); border-right-color: transparent; border-radius: 50%; background: transparent; }
-.touch-btn.nade { right: 76px; bottom: calc(122px + var(--safe)); }
-.touch-btn.nade i { width: 10px; height: 16px; border-radius: 4px; }
-.touch-btn.jump { right: 22px; top: 16%; }
-.touch-btn.jump i { clip-path: polygon(50% 0, 100% 100%, 0 100%); width: 14px; height: 12px; }
-.touch-btn.crouch { right: 76px; top: 16%; }
-.touch-btn.crouch i { width: 16px; height: 8px; }
-.touch-btn.use { left: 172px; bottom: calc(40px + var(--safe)); }
-.touch-btn.use i { width: 12px; height: 12px; border: 2px solid var(--paper); background: transparent; }
-.touch-btn.pause { left: 16px; top: 12px; width: 40px; height: 40px; }
-.touch-btn.pause i { width: 12px; height: 12px; background: repeating-linear-gradient(90deg, currentColor 0 3px, transparent 3px 6px); }
-.touch-btn.fs { left: 64px; top: 12px; width: 40px; height: 40px; }
-.touch-btn.fs i { width: 12px; height: 12px; border: 2px solid var(--paper); background: transparent; }
+.touch-btn.small-btn { width: 48px; height: 48px; }
+.touch-btn span {
+  display: block; font-size: 11px; letter-spacing: .12em; font-weight: 700;
+  pointer-events: none;
+}
+.touch-btn.small-btn span { font-size: 9px; }
+.touch-btn.fire { right: 16px; bottom: calc(18px + var(--safe)); width: 92px; height: 92px; }
+.touch-btn.fire span { font-size: 13px; }
+.touch-btn.aim { right: 118px; bottom: calc(22px + var(--safe)); }
+.touch-btn.reload { right: 18px; bottom: calc(118px + var(--safe)); }
+.touch-btn.nade { right: 74px; bottom: calc(118px + var(--safe)); }
+.touch-btn.jump { right: 18px; top: 14%; }
+.touch-btn.crouch { right: 74px; top: 14%; }
+.touch-btn.use { left: 168px; bottom: calc(36px + var(--safe)); }
+.touch-btn.pause { left: 14px; top: 10px; width: 42px; height: 42px; }
+.touch-btn.fs { left: 62px; top: 10px; width: 42px; height: 42px; }
+.touch-btn.sprint { left: 168px; bottom: calc(90px + var(--safe)); }
 .rotate-card { text-align: center; }
 .rotate-icon { font-size: 64px; margin-bottom: 8px; }
 @media (orientation: portrait) and (max-width: 900px) {
@@ -199,12 +205,14 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0c0b08; col
 @media (orientation: landscape) {
   #rotate-overlay { display: none !important; }
 }
-body.swap-hands #joy-base { left: auto; right: 28px; }
+body.swap-hands #joy-base { left: auto; right: 22px; }
+body.swap-hands #move-zone { left: auto; right: 0; }
 body.swap-hands #look-zone { right: auto; left: 0; }
-body.swap-hands .touch-btn.fire { right: auto; left: 20px; }
-body.swap-hands .touch-btn.aim { right: auto; left: 116px; }
-body.swap-hands .touch-btn.reload { right: auto; left: 22px; }
-body.swap-hands .touch-btn.nade { right: auto; left: 76px; }
-body.swap-hands .touch-btn.jump { right: auto; left: 22px; }
-body.swap-hands .touch-btn.crouch { right: auto; left: 76px; }
-body.swap-hands .touch-btn.use { left: auto; right: 172px; }
+body.swap-hands .touch-btn.fire { right: auto; left: 16px; }
+body.swap-hands .touch-btn.aim { right: auto; left: 118px; }
+body.swap-hands .touch-btn.reload { right: auto; left: 18px; }
+body.swap-hands .touch-btn.nade { right: auto; left: 74px; }
+body.swap-hands .touch-btn.jump { right: auto; left: 18px; }
+body.swap-hands .touch-btn.crouch { right: auto; left: 74px; }
+body.swap-hands .touch-btn.use { left: auto; right: 168px; }
+body.swap-hands .touch-btn.sprint { left: auto; right: 168px; }
