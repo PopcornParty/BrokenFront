@@ -1,4 +1,4 @@
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 export const SAVE_KEY = 'brokenfront-save-v1';
 
 export const DIFFICULTY = {
@@ -22,9 +22,10 @@ export const KIT_COLORS = {
 };
 
 export const GFX = {
-  low:    { pixelRatio: 1.0, fogFar: 90,  particles: 8,  shadows: false, farSoldiers: 6 },
-  medium: { pixelRatio: 1.25,fogFar: 120, particles: 16, shadows: false, farSoldiers: 10 },
-  high:   { pixelRatio: 1.6, fogFar: 160, particles: 28, shadows: true,  farSoldiers: 14 }
+  low:      { pixelRatio: 1.0, fogNear: 12, fogFar: 78,  particles: 6,  shadows: false, farSoldiers: 4,  terrainSeg: 22, grass: 40,  detail: 0.6 },
+  medium:   { pixelRatio: 1.25,fogNear: 16, fogFar: 118, particles: 14, shadows: false, farSoldiers: 8,  terrainSeg: 36, grass: 90,  detail: 1.0 },
+  high:     { pixelRatio: 1.55,fogNear: 20, fogFar: 155, particles: 24, shadows: true,  farSoldiers: 12, terrainSeg: 48, grass: 140, detail: 1.2 },
+  veryhigh: { pixelRatio: 1.85,fogNear: 24, fogFar: 190, particles: 34, shadows: true,  farSoldiers: 16, terrainSeg: 60, grass: 200, detail: 1.4 }
 };
 
 export const DEFAULT_SETTINGS = {
@@ -35,5 +36,7 @@ export const DEFAULT_SETTINGS = {
   graphics: 'medium',
   difficulty: 'normal',
   vibration: true,
-  swapHands: false
+  swapHands: false,
+  buttonOpacity: 70,
+  cameraShake: true
 };

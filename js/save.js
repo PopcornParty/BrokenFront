@@ -4,7 +4,14 @@ export function loadSave() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return createFresh();
-    return { ...createFresh(), ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    const fresh = createFresh();
+    return {
+      ...fresh,
+      ...parsed,
+      soldier: { ...fresh.soldier, ...(parsed.soldier || {}) },
+      settings: { ...fresh.settings, ...(parsed.settings || {}) }
+    };
   } catch {
     return createFresh();
   }
