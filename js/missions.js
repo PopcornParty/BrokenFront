@@ -8,21 +8,23 @@ export const MISSIONS = [
     spawn: [0, 1.7, 8],
     yaw: 0,
     objectives: [
-      { id: 'wake', text: 'Get your bearings — look around', type: 'look', duration: 4 },
-      { id: 'move', text: 'Move toward the smoke ahead', type: 'reach', pos: [0, 0, -28], r: 6 },
-      { id: 'fire', text: 'Return fire and clear the ditch', type: 'clear', count: 3 },
-      { id: 'aid', text: 'Reach the aid trench', type: 'reach', pos: [4, 0, -62], r: 5 }
+      { id: 'wake', text: 'Get your bearings', hint: 'Look around with the right side of the screen.', type: 'look', duration: 3.2 },
+      { id: 'move', text: 'Reach the forward trench', hint: 'Follow the marker. Stay low behind cover.', type: 'reach', pos: [0, 0, -28], r: 7 },
+      { id: 'fire', text: 'Clear the two rifles ahead', hint: 'Use the sandbags. They cannot shoot through rock.', type: 'clear', count: 2 },
+      { id: 'aid', text: 'Reach the aid trench', hint: 'Supplies sit by the crate. Keep moving west of the wreck.', type: 'reach', pos: [4, 0, -62], r: 6 }
     ],
     radio: [
       { t: 2, msg: 'HQ: All units, scatter! Hold any ditch you can find.' },
       { t: 16, msg: 'Unknown: Get off the road! Aid marker is west of the wreck.' }
     ],
     enemies: [
-      { x: -6, z: -22, cover: [-8, -24] },
-      { x: 8, z: -30, cover: [10, -32] },
-      { x: 2, z: -40, cover: [0, -42] }
+      { x: -8, z: -26, cover: [-10, -28], wakeDelay: 9 },
+      { x: 9, z: -34, cover: [11, -36], wakeDelay: 14 }
     ],
-    pickups: [],
+    pickups: [
+      { type: 'ammo', x: 1.5, z: -17 },
+      { type: 'med', x: 5, z: -60 }
+    ],
     events: [{ t: 6, type: 'artillery', x: 12, z: -18 }]
   },
   {
