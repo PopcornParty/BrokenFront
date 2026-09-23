@@ -4,10 +4,87 @@ export const SEEN_KEY = 'brokenfront-changelog-seen';
 
 export const CHANGELOG = [
   {
+    version: '1.5.0',
+    title: 'TOGGLE AIM AND SEEDED LANE',
+    date: '23 September 2026',
+    description: 'AIM stays on until you tap it again. The battlefield now lays cover in a seeded zigzag so each mission stretch is packed instead of empty.',
+    added: [
+      'Toggle AIM on mobile: tap once to aim, tap again to leave ADS',
+      'AIM button highlight while aimed',
+      'Seeded map generator that places ruins, wrecks, trenches and sandbags down the lane'
+    ],
+    removed: [
+      'Hold-to-aim on the mobile AIM button'
+    ],
+    fixed: [
+      'AIM dropping as soon as the thumb lifted'
+    ],
+    improved: [
+      'Cover density along the fight corridor'
+    ]
+  },
+  {
+    version: '1.4.1',
+    title: 'WALLS BLOCK FIRE',
+    date: '23 September 2026',
+    description: 'Enemies no longer shoot through brick walls. Cover uses a real ray test against every solid piece.',
+    added: [
+      'Ray-box line of sight for walls, wrecks and banks',
+      'Thicker ruined houses with extra walls, roof slab and rubble'
+    ],
+    removed: [],
+    fixed: [
+      'AI firing through walls',
+      'Thin walls being skipped by coarse sight checks'
+    ],
+    improved: [
+      'Sandbag nests in the lane',
+      'Ruin silhouettes'
+    ]
+  },
+  {
+    version: '1.4.0',
+    title: 'NARROW FRONT',
+    date: '23 September 2026',
+    description: 'The map is no longer a wide empty field. Earth banks close the sides so you cannot walk around cover.',
+    added: [
+      'Earth banks that close the sides of every mission',
+      'Denser wrecks, sandbag nests and ruined houses on the first map'
+    ],
+    removed: [
+      'Wide open flanks around isolated cover'
+    ],
+    fixed: [
+      'Walking around enemy positions instead of fighting through them'
+    ],
+    improved: [
+      'Battlefield density and readable lane'
+    ]
+  },
+  {
+    version: '1.3.1',
+    title: 'MOBILE THUMBS',
+    date: '23 September 2026',
+    description: 'Broken Front is built for landscape phones first. The stick, look pad and fire cluster are easier to use with two thumbs.',
+    added: [
+      'Larger left-hand move pad around the joystick',
+      'Look pad that stays above the FIRE / AIM cluster so buttons are not blocked'
+    ],
+    removed: [],
+    fixed: [
+      'Phone page-scroll stealing look drags',
+      'Having to hit the exact joystick circle to walk'
+    ],
+    improved: [
+      'Touch look speed',
+      'On-screen control labels'
+    ]
+  },
+  {
     version: '1.3.0',
     title: 'CONTROLS RESTORED',
     date: '23 September 2026',
-    description: 'Fixes the live build where movement, look and fire did nothing after load. Tightens the HUD so objectives and buttons are readable on a phone.',
+    description: 'Fixes the live build where movement, look and fire did nothing after load.',
     added: [
       'Text labels on fire, aim, reload, grenade and sprint',
       'Clearer mission chip and objective card'
@@ -27,7 +104,7 @@ export const CHANGELOG = [
     version: '1.2.0',
     title: 'FRONT REPAIR',
     date: '23 September 2026',
-    description: 'Fixes the blank Continue world and dead controls after Resume, rebuilds mission loading, and gives each of the seven missions its own battlefield.',
+    description: 'Fixes the blank Continue world and dead controls after Resume, and rebuilds mission loading.',
     added: [
       'Reliable mission loading screen that only drops into play after the world exists',
       'World objective beacon on reach points',
@@ -57,7 +134,7 @@ export const CHANGELOG = [
     version: '1.1.0',
     title: 'BATTLEFIELD EXPANSION',
     date: '23 September 2026',
-    description: 'A visual and systems overhaul of the opening front. The ground is no longer flat, cover actually blocks fire, and the first section is taught instead of thrown.',
+    description: 'A visual and systems overhaul of the opening front. Cover actually blocks fire, and the first section is taught instead of thrown.',
     added: [
       'Uneven rural battlefield with craters, trenches, rocks, fences and debris',
       'Distant ruined skyline for later city missions',
