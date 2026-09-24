@@ -1,4 +1,4 @@
-export const VERSION = '1.7.0';
+export const VERSION = '1.7.1';
 export const SAVE_KEY = 'brokenfront-save-v1';
 
 export const DIFFICULTY = {
@@ -8,10 +8,10 @@ export const DIFFICULTY = {
 };
 
 export const WEAPONS = {
-  rifle:  { id: 'rifle',  name: 'SERVICE RIFLE', dmg: 54, rate: 0.58, mag: 5,  reserve: 40, reload: 1.9, recoil: 0.028, spread: 0.007, auto: false },
-  carbine:{ id: 'carbine',name: 'CARBINE',       dmg: 30, rate: 0.15, mag: 15, reserve: 60, reload: 2.1, recoil: 0.018, spread: 0.012, auto: true },
-  smg:    { id: 'smg',    name: 'FIELD SMG',     dmg: 20, rate: 0.075,mag: 30, reserve: 90, reload: 1.8, recoil: 0.014, spread: 0.018, auto: true },
-  pistol: { id: 'pistol', name: 'SIDEARM',       dmg: 22, rate: 0.22, mag: 8,  reserve: 32, reload: 1.4, recoil: 0.014, spread: 0.014, auto: false }
+  rifle:  { id: 'rifle',  name: 'SERVICE RIFLE', dmg: 54, rate: 0.58, mag: 5,  reserve: 40, reload: 1.9, recoil: 0.008, spread: 0.005, auto: false },
+  carbine:{ id: 'carbine',name: 'CARBINE',       dmg: 30, rate: 0.15, mag: 15, reserve: 60, reload: 2.1, recoil: 0.005, spread: 0.008, auto: true },
+  smg:    { id: 'smg',    name: 'FIELD SMG',     dmg: 20, rate: 0.075,mag: 30, reserve: 90, reload: 1.8, recoil: 0.003, spread: 0.012, auto: true },
+  pistol: { id: 'pistol', name: 'SIDEARM',       dmg: 22, rate: 0.22, mag: 8,  reserve: 32, reload: 1.4, recoil: 0.004, spread: 0.008, auto: false }
 };
 
 export const KIT_COLORS = {
