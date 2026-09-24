@@ -1,17 +1,17 @@
-export const VERSION = '1.5.0';
+export const VERSION = '1.6.0';
 export const SAVE_KEY = 'brokenfront-save-v1';
 
 export const DIFFICULTY = {
-  easy:   { name: 'Easy',   playerHp: 140, dmgTaken: 0.65, enemyAcc: 0.22, enemyHp: 70,  ammoMul: 1.6, pickupMul: 1.4 },
-  normal: { name: 'Normal', playerHp: 100, dmgTaken: 1.00, enemyAcc: 0.38, enemyHp: 90,  ammoMul: 1.0, pickupMul: 1.0 },
-  hard:   { name: 'Hard',   playerHp: 85,  dmgTaken: 1.25, enemyAcc: 0.52, enemyHp: 110, ammoMul: 0.75, pickupMul: 0.8 }
+  easy:   { name: 'Easy',   playerHp: 110, dmgTaken: 0.90, enemyAcc: 0.48, enemyHp: 58,  ammoMul: 1.35, pickupMul: 1.3 },
+  normal: { name: 'Normal', playerHp: 80,  dmgTaken: 1.15, enemyAcc: 0.66, enemyHp: 68,  ammoMul: 1.0, pickupMul: 1.0 },
+  hard:   { name: 'Hard',   playerHp: 65,  dmgTaken: 1.40, enemyAcc: 0.80, enemyHp: 78,  ammoMul: 0.8, pickupMul: 0.85 }
 };
 
 export const WEAPONS = {
-  rifle:  { id: 'rifle',  name: 'SERVICE RIFLE', dmg: 38, rate: 0.85, mag: 5,  reserve: 40, reload: 2.1, recoil: 0.035, spread: 0.012, auto: false },
-  carbine:{ id: 'carbine',name: 'CARBINE',       dmg: 26, rate: 0.22, mag: 15, reserve: 60, reload: 2.3, recoil: 0.022, spread: 0.018, auto: true },
-  smg:    { id: 'smg',    name: 'FIELD SMG',     dmg: 16, rate: 0.09, mag: 30, reserve: 90, reload: 2.0, recoil: 0.018, spread: 0.028, auto: true },
-  pistol: { id: 'pistol', name: 'SIDEARM',       dmg: 18, rate: 0.28, mag: 8,  reserve: 32, reload: 1.6, recoil: 0.016, spread: 0.020, auto: false }
+  rifle:  { id: 'rifle',  name: 'SERVICE RIFLE', dmg: 54, rate: 0.58, mag: 5,  reserve: 40, reload: 1.9, recoil: 0.028, spread: 0.007, auto: false },
+  carbine:{ id: 'carbine',name: 'CARBINE',       dmg: 30, rate: 0.15, mag: 15, reserve: 60, reload: 2.1, recoil: 0.018, spread: 0.012, auto: true },
+  smg:    { id: 'smg',    name: 'FIELD SMG',     dmg: 20, rate: 0.075,mag: 30, reserve: 90, reload: 1.8, recoil: 0.014, spread: 0.018, auto: true },
+  pistol: { id: 'pistol', name: 'SIDEARM',       dmg: 22, rate: 0.22, mag: 8,  reserve: 32, reload: 1.4, recoil: 0.014, spread: 0.014, auto: false }
 };
 
 export const KIT_COLORS = {
