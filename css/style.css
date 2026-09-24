@@ -27,14 +27,26 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0c0b08; col
     repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 2px, transparent 2px 4px);
   pointer-events: none;
 }
-.menu-content { position: relative; text-align: center; padding: 24px; }
-.menu-kicker { letter-spacing: .42em; font-size: 11px; color: var(--brass); margin: 0 0 10px; }
+.menu-content {
+  position: relative; text-align: center;
+  padding: 16px 20px 20px;
+  max-width: 100vw;
+  max-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.menu-kicker {
+  letter-spacing: .22em; font-size: 10px; color: var(--brass);
+  margin: 0 0 8px; padding: 0 8px;
+}
 .game-title {
-  font-weight: 800; letter-spacing: .14em; line-height: .88;
-  font-size: clamp(44px, 12vw, 96px); margin: 0 0 12px;
+  font-weight: 800; letter-spacing: .06em; line-height: .92;
+  font-size: clamp(26px, 8vw, 56px); margin: 0 0 8px;
+  padding: 0 12px;
   text-shadow: 0 10px 36px rgba(0,0,0,.7);
 }
-.menu-tag { opacity: .82; margin: 0 0 22px; }
+.menu-tag { opacity: .82; margin: 0 0 14px; padding: 0 16px; font-size: 13px; }
 .menu-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .menu-hint { margin: 16px auto 8px; max-width: 420px; font-size: 12px; letter-spacing: .04em; opacity: .62; line-height: 1.4; }
 .menu-version { margin: 14px 0 0; letter-spacing: .28em; font-size: 11px; color: var(--brass); opacity: .85; }
@@ -60,7 +72,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0c0b08; col
 .log-sec li { margin: 4px 0; font-size: 13px; }
 .log-empty { opacity: .55; font-size: 13px; margin: 0; }
 .btn {
-  min-width: 240px; padding: 13px 18px; border: 1px solid #7a6844;
+  min-width: min(240px, 80vw); padding: 13px 18px; border: 1px solid #7a6844;
   background: linear-gradient(180deg, rgba(50,42,28,.88), rgba(18,15,10,.88));
   color: var(--paper); letter-spacing: .16em;
   text-transform: uppercase; font-size: 13px; cursor: pointer;
@@ -119,7 +131,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #0c0b08; col
 }
 #objective-box {
   position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-  background: var(--hud); padding: 8px 14px; min-width: 230px; text-align: center;
+  background: var(--hud); padding: 8px 14px; min-width: min(230px, 86vw); text-align: center;
   border: 1px solid rgba(196,164,106,.4);
 }
 .obj-label { display: block; font-size: 9px; letter-spacing: .3em; color: var(--brass); }
@@ -216,3 +228,17 @@ body.swap-hands .touch-btn.jump { right: auto; left: 18px; }
 body.swap-hands .touch-btn.crouch { right: auto; left: 74px; }
 body.swap-hands .touch-btn.use { left: auto; right: 168px; }
 body.swap-hands .touch-btn.sprint { left: auto; right: 168px; }
+@media (max-height: 430px) {
+  .menu-content { padding: 8px 12px 12px; }
+  .menu-kicker { font-size: 9px; letter-spacing: .16em; margin: 0 0 4px; }
+  .game-title { font-size: clamp(22px, 7vh, 36px); letter-spacing: .04em; margin: 0 0 4px; }
+  .menu-tag { display: none; }
+  .menu-hint { display: none; }
+  .menu-version { margin: 8px 0 0; }
+  .menu-actions { gap: 6px; }
+  .btn { padding: 8px 16px; min-width: min(220px, 70vw); }
+}
+@media (max-width: 700px) {
+  .game-title { font-size: clamp(24px, 10vw, 42px); letter-spacing: .04em; }
+  .menu-kicker { letter-spacing: .14em; }
+}
