@@ -4,13 +4,13 @@ import { makeSoldierMesh } from './world.js';
 export class Enemy {
   constructor(scene, spec, hp, acc) {
     this.mesh = makeSoldierMesh(0x4a4034, true);
-    const x = THREE.MathUtils.clamp(spec.x, -8.5, 8.5);
+    const x = THREE.MathUtils.clamp(spec.x, -6.5, 6.5);
     const z = spec.z;
     this.mesh.position.set(x, 0, z);
     scene.add(this.mesh);
     this.pos = this.mesh.position;
     this.cover = spec.cover
-      ? new THREE.Vector3(THREE.MathUtils.clamp(spec.cover[0], -8.5, 8.5), 0, spec.cover[1])
+      ? new THREE.Vector3(THREE.MathUtils.clamp(spec.cover[0], -6.5, 6.5), 0, spec.cover[1])
       : this.pos.clone();
     this.hp = hp;
     this.maxHp = hp;
@@ -26,7 +26,7 @@ export class Enemy {
     this.dir = 1;
     this.alert = 0;
     this.hitFlash = 0;
-    this.wakeDelay = Math.min(spec.wakeDelay || 0, 3.5);
+    this.wakeDelay = Math.min(spec.wakeDelay || 0, 1.5);
     this.hasLos = false;
   }
 
@@ -53,10 +53,12 @@ export class Enemy {
     const dist = toP.length();
     const inRange = dist < 42 && Math.abs(toP.y) < 8;
     this.hasLos = false;
-    if (inRange && this.wakeDelay <= 0) {
+    if (inRange && this.wakeDelay <= 0 && world && world.blockedLOS) {
       const chestClear = !world.blockedLOS(eye, targetChest);
       const headClear = !world.blockedLOS(eye, targetHead);
       this.hasLos = chestClear || headClear;
+    } else if (inRange && this.wakeDelay <= 0) {
+      this.hasLos = true;
     }
 
     if (this.hasLos) this.alert = 6;
@@ -75,7 +77,7 @@ export class Enemy {
     if (this.state === 'flank') {
       const side = new THREE.Vector3(-toP.z, 0, toP.x).normalize().multiplyScalar(6);
       dest = player.pos.clone().add(side);
-      dest.x = THREE.MathUtils.clamp(dest.x, -8.5, 8.5);
+      dest.x = THREE.MathUtils.clamp(dest.x, -6.5, 6.5);
     }
     if (this.state === 'retreat') {
       dest = this.home.clone().add(new THREE.Vector3(this.pos.x - player.pos.x, 0, this.pos.z - player.pos.z).normalize().multiplyScalar(8));
@@ -90,12 +92,12 @@ export class Enemy {
       if (wl > 1.0) {
         wish.multiplyScalar((this.state === 'retreat' ? 2.4 : 1.8) * dt / wl);
         this.pos.add(wish);
-        world.collide(this.pos, 0.45);
+        if (world && world.collide) world.collide(this.pos, 0.45);
       }
     }
 
-    this.pos.x = THREE.MathUtils.clamp(this.pos.x, -8.6, 8.6);
-    this.pos.y = world.heightAt(this.pos.x, this.pos.z);
+    this.pos.x = THREE.MathUtils.clamp(this.pos.x, -6.6, 6.6);
+    this.pos.y = world && world.heightAt ? world.heightAt(this.pos.x, this.pos.z) : 0;
     if (this.alert > 0) this.yaw = Math.atan2(toP.x, toP.z);
     else this.yaw += (this.dir * 0.4 - this.yaw) * 0.02;
     this.mesh.rotation.y = this.yaw;
@@ -104,8 +106,9 @@ export class Enemy {
     let shot = null;
     if (this.hasLos && this.cool <= 0 && dist < 38) {
       this.cool = 0.55 + Math.random() * 0.35;
-      const aimAt = !world.blockedLOS(eye, targetHead) ? targetHead : targetChest;
-      if (world.blockedLOS(eye, aimAt)) {
+      const aimAt = targetHead;
+      const blocked = world && world.blockedLOS ? world.blockedLOS(eye, aimAt) : false;
+      if (blocked) {
         this.hasLos = false;
       } else {
         const hitChance = this.acc + Math.min(0.22, (30 - dist) * 0.01);
@@ -121,7 +124,8 @@ export class Enemy {
     this.hitFlash = 0.14;
     this.alert = 6;
     this.wakeDelay = 0;
-    if (this.mesh.userData.body) this.mesh.userData.body.material.emissive = new THREE.Color(0x5a2010);
+    const body = this.mesh.userData.body;
+    if (body && body.material && body.material.emissive) body.material.emissive.setHex(0x5a2010);
     if (this.hp <= 0) this.kill();
     return !this.alive;
   }
@@ -139,7 +143,11 @@ export class EnemyManager {
     this.scene = scene;
     this.hp = hp;
     this.acc = acc;
-    this.units = list.map((s) => new Enemy(scene, s, hp, acc));
+    const seed = (list && list.length) ? list : [
+      { x: -4, z: -16, cover: [-5, -18] },
+      { x: 4, z: -22, cover: [5, -24] }
+    ];
+    this.units = seed.map((s) => new Enemy(scene, s, hp, acc));
   }
 
   living() { return this.units.filter((u) => u.alive); }
@@ -147,10 +155,15 @@ export class EnemyManager {
   update(dt, player, world) {
     const shots = [];
     for (const u of this.units) {
-      const s = u.update(dt, player, world);
-      if (s) shots.push(s);
-      if (u.hitFlash <= 0 && u.alive && u.mesh.userData.body) {
-        u.mesh.userData.body.material.emissive = new THREE.Color(0x000000);
+      try {
+        const s = u.update(dt, player, world);
+        if (s) shots.push(s);
+        if (u.hitFlash <= 0 && u.alive) {
+          const body = u.mesh.userData.body;
+          if (body && body.material && body.material.emissive) body.material.emissive.setHex(0x000000);
+        }
+      } catch (err) {
+        console.warn('enemy tick', err);
       }
     }
     return shots;
@@ -158,8 +171,8 @@ export class EnemyManager {
 
   spawn(n, z) {
     for (let i = 0; i < n; i++) {
-      if (this.living().length >= 8) return;
-      const spec = { x: -6 + i * 4 + Math.random() * 2, z: z + Math.random() * 5, cover: [-5 + i * 4, z + 3] };
+      if (this.living().length >= 8) break;
+      const spec = { x: -5 + (i % 3) * 5, z: (z || -20) - i * 3, cover: [-5 + (i % 3) * 5, (z || -20) - i * 3 - 2] };
       this.units.push(new Enemy(this.scene, spec, this.hp, this.acc));
     }
   }
@@ -184,7 +197,7 @@ export class EnemyManager {
         if (dist < 0.15 || dist > bestD) continue;
         const closest = origin.clone().addScaledVector(dir, dist);
         if (closest.distanceTo(t.p) > t.r) continue;
-        if (world && world.blockedLOS(origin, t.p)) continue;
+        if (world && world.blockedLOS && world.blockedLOS(origin, t.p)) continue;
         best = u;
         bestD = dist;
         part = t.part;
