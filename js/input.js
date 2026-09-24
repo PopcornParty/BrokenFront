@@ -105,12 +105,13 @@ export class Input {
       const hold = key === 'fire' || key === 'crouch' || key === 'sprint';
       const down = (e) => {
         e.preventDefault();
+        e.stopPropagation();
         if (toggle) {
           this[key] = !this[key];
           el.classList.toggle('on', this[key]);
         } else this[key] = true;
       };
-      const up = (e) => { e.preventDefault(); if (hold) this[key] = false; };
+      const up = (e) => { e.preventDefault(); e.stopPropagation(); if (hold) this[key] = false; };
       el.addEventListener('touchstart', down, { passive: false });
       el.addEventListener('touchend', up, { passive: false });
       el.addEventListener('touchcancel', up, { passive: false });
@@ -120,6 +121,7 @@ export class Input {
 
     const startJoy = (e) => {
       e.preventDefault();
+      e.stopPropagation();
       this.enabled = true;
       const t = e.changedTouches[0];
       const r = joy.getBoundingClientRect();
@@ -132,6 +134,7 @@ export class Input {
     if (moveZone) moveZone.addEventListener('touchstart', startJoy, { passive: false });
 
     look.addEventListener('touchstart', (e) => {
+      if (e.target && e.target.closest && e.target.closest('.touch-btn')) return;
       e.preventDefault();
       this.enabled = true;
       const t = e.changedTouches[0];
@@ -189,7 +192,7 @@ export class Input {
   }
 
   consumeLook(sens) {
-    const mul = this.isTouch ? 0.0032 : 0.0022;
+    const mul = this.isTouch ? 0.0024 : 0.0022;
     const sx = this.lookAccumX * mul * sens;
     const sy = this.lookAccumY * mul * sens;
     this.lookAccumX = 0; this.lookAccumY = 0;
