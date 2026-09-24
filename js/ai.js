@@ -4,26 +4,38 @@ import { makeSoldierMesh } from './world.js';
 export class Enemy {
   constructor(scene, spec, hp, acc) {
     this.mesh = makeSoldierMesh(0x4a4034, true);
-    this.mesh.position.set(spec.x, 0, spec.z);
+    const x = THREE.MathUtils.clamp(spec.x, -8.5, 8.5);
+    const z = spec.z;
+    this.mesh.position.set(x, 0, z);
     scene.add(this.mesh);
     this.pos = this.mesh.position;
-    this.cover = spec.cover ? new THREE.Vector3(spec.cover[0], 0, spec.cover[1]) : this.pos.clone();
+    this.cover = spec.cover
+      ? new THREE.Vector3(THREE.MathUtils.clamp(spec.cover[0], -8.5, 8.5), 0, spec.cover[1])
+      : this.pos.clone();
     this.hp = hp;
     this.maxHp = hp;
     this.acc = acc;
     this.state = 'patrol';
     this.alive = true;
-    this.cool = 0.8 + Math.random();
+    this.cool = 0.35 + Math.random() * 0.4;
     this.t = Math.random() * 10;
     this.yaw = 0;
-    this.home = new THREE.Vector3(spec.x, 0, spec.z);
-    this.patrolA = spec.x - 3;
-    this.patrolB = spec.x + 3;
+    this.home = new THREE.Vector3(x, 0, z);
+    this.patrolA = x - 2.4;
+    this.patrolB = x + 2.4;
     this.dir = 1;
     this.alert = 0;
     this.hitFlash = 0;
-    this.wakeDelay = spec.wakeDelay || 0;
+    this.wakeDelay = Math.min(spec.wakeDelay || 0, 3.5);
     this.hasLos = false;
+  }
+
+  bodyPoint() {
+    return new THREE.Vector3(this.pos.x, this.pos.y + 1.05, this.pos.z);
+  }
+
+  headPoint() {
+    return new THREE.Vector3(this.pos.x, this.pos.y + 1.58, this.pos.z);
   }
 
   update(dt, player, world) {
@@ -33,33 +45,40 @@ export class Enemy {
     this.hitFlash = Math.max(0, this.hitFlash - dt);
     if (this.wakeDelay > 0) this.wakeDelay -= dt;
 
-    const eye = this.pos.clone(); eye.y = this.pos.y + 1.45;
-    const target = player.pos.clone();
-    target.y = (player.pos.y || 1.6) - 0.15;
-    const toP = new THREE.Vector3().subVectors(target, eye);
+    const eye = this.headPoint();
+    const targetChest = player.pos.clone();
+    targetChest.y -= 0.2;
+    const targetHead = player.pos.clone();
+    const toP = new THREE.Vector3().subVectors(targetChest, eye);
     const dist = toP.length();
-    const inRange = dist < 36 && Math.abs(toP.y) < 6;
+    const inRange = dist < 42 && Math.abs(toP.y) < 8;
     this.hasLos = false;
     if (inRange && this.wakeDelay <= 0) {
-      this.hasLos = !world.blockedLOS(eye, target);
+      const chestClear = !world.blockedLOS(eye, targetChest);
+      const headClear = !world.blockedLOS(eye, targetHead);
+      this.hasLos = chestClear || headClear;
     }
 
-    if (this.hasLos) this.alert = 4;
+    if (this.hasLos) this.alert = 6;
     else this.alert = Math.max(0, this.alert - dt);
 
-    if (this.hp < this.maxHp * 0.28 && dist < 14) this.state = 'retreat';
-    else if (this.alert > 0 && dist < 16 && this.hasLos) this.state = 'flank';
+    if (this.hp < this.maxHp * 0.16 && dist < 10) this.state = 'retreat';
+    else if (this.alert > 0 && dist < 14 && this.hasLos) this.state = 'flank';
     else if (this.alert > 0) this.state = 'cover';
     else this.state = 'patrol';
 
     let dest = this.home;
-    if (this.state === 'cover') dest = this.cover;
+    if (this.state === 'cover') {
+      dest = this.cover.clone();
+      if (!this.hasLos) dest.x += Math.sin(this.t * 1.3) * 2.4;
+    }
     if (this.state === 'flank') {
-      const side = new THREE.Vector3(-toP.z, 0, toP.x).normalize().multiplyScalar(8);
+      const side = new THREE.Vector3(-toP.z, 0, toP.x).normalize().multiplyScalar(6);
       dest = player.pos.clone().add(side);
+      dest.x = THREE.MathUtils.clamp(dest.x, -8.5, 8.5);
     }
     if (this.state === 'retreat') {
-      dest = this.home.clone().add(new THREE.Vector3(this.pos.x - player.pos.x, 0, this.pos.z - player.pos.z).normalize().multiplyScalar(10));
+      dest = this.home.clone().add(new THREE.Vector3(this.pos.x - player.pos.x, 0, this.pos.z - player.pos.z).normalize().multiplyScalar(8));
     }
     if (this.state === 'patrol') {
       this.pos.x += this.dir * dt * 1.1;
@@ -68,27 +87,30 @@ export class Enemy {
     } else {
       const wish = new THREE.Vector3(dest.x - this.pos.x, 0, dest.z - this.pos.z);
       const wl = wish.length();
-      if (wl > 1.2) {
+      if (wl > 1.0) {
         wish.multiplyScalar((this.state === 'retreat' ? 2.4 : 1.8) * dt / wl);
         this.pos.add(wish);
         world.collide(this.pos, 0.45);
       }
     }
 
+    this.pos.x = THREE.MathUtils.clamp(this.pos.x, -8.6, 8.6);
     this.pos.y = world.heightAt(this.pos.x, this.pos.z);
-    if (this.hasLos) this.yaw = Math.atan2(toP.x, toP.z);
+    if (this.alert > 0) this.yaw = Math.atan2(toP.x, toP.z);
     else this.yaw += (this.dir * 0.4 - this.yaw) * 0.02;
     this.mesh.rotation.y = this.yaw;
     this.mesh.position.y = this.pos.y + Math.sin(this.t * 6) * (this.state === 'patrol' ? 0.03 : 0.01);
 
     let shot = null;
-    if (this.hasLos && this.cool <= 0 && dist < 34) {
-      this.cool = 0.9 + Math.random() * 1.0;
-      if (world.blockedLOS(eye, target)) {
+    if (this.hasLos && this.cool <= 0 && dist < 38) {
+      this.cool = 0.55 + Math.random() * 0.35;
+      const aimAt = !world.blockedLOS(eye, targetHead) ? targetHead : targetChest;
+      if (world.blockedLOS(eye, aimAt)) {
         this.hasLos = false;
       } else {
-        const miss = Math.random() > this.acc + Math.min(0.15, (34 - dist) * 0.003);
-        shot = { from: eye.clone(), toward: target.clone(), hit: !miss, dmg: 8 + Math.random() * 6 };
+        const hitChance = this.acc + Math.min(0.22, (30 - dist) * 0.01);
+        const miss = Math.random() > hitChance;
+        shot = { from: eye.clone(), toward: aimAt.clone(), hit: !miss, dmg: 20 + Math.random() * 8 };
       }
     }
     return shot;
@@ -96,10 +118,10 @@ export class Enemy {
 
   damage(n) {
     this.hp -= n;
-    this.hitFlash = 0.12;
-    this.alert = 4;
+    this.hitFlash = 0.14;
+    this.alert = 6;
     this.wakeDelay = 0;
-    this.mesh.userData.body.material.emissive = new THREE.Color(0x33220a);
+    if (this.mesh.userData.body) this.mesh.userData.body.material.emissive = new THREE.Color(0x5a2010);
     if (this.hp <= 0) this.kill();
     return !this.alive;
   }
@@ -108,7 +130,7 @@ export class Enemy {
     this.alive = false;
     this.mesh.rotation.x = -Math.PI / 2;
     this.mesh.position.y = (this.pos.y || 0) + 0.2;
-    setTimeout(() => { if (this.mesh.parent) this.mesh.parent.remove(this.mesh); }, 2500);
+    setTimeout(() => { if (this.mesh.parent) this.mesh.parent.remove(this.mesh); }, 2200);
   }
 }
 
@@ -127,7 +149,9 @@ export class EnemyManager {
     for (const u of this.units) {
       const s = u.update(dt, player, world);
       if (s) shots.push(s);
-      if (u.hitFlash <= 0 && u.alive) u.mesh.userData.body.material.emissive = new THREE.Color(0x000000);
+      if (u.hitFlash <= 0 && u.alive && u.mesh.userData.body) {
+        u.mesh.userData.body.material.emissive = new THREE.Color(0x000000);
+      }
     }
     return shots;
   }
@@ -135,7 +159,7 @@ export class EnemyManager {
   spawn(n, z) {
     for (let i = 0; i < n; i++) {
       if (this.living().length >= 8) return;
-      const spec = { x: -10 + i * 7 + Math.random() * 4, z: z + Math.random() * 6, cover: [-8 + i * 6, z + 4] };
+      const spec = { x: -6 + i * 4 + Math.random() * 2, z: z + Math.random() * 5, cover: [-5 + i * 4, z + 3] };
       this.units.push(new Enemy(this.scene, spec, this.hp, this.acc));
     }
   }
@@ -146,19 +170,27 @@ export class EnemyManager {
   }
 
   rayHit(origin, dir, range = 80, world = null) {
-    let best = null, bestD = range;
+    let best = null;
+    let bestD = range;
+    let part = 'body';
     for (const u of this.living()) {
-      const to = new THREE.Vector3().subVectors(u.pos, origin);
-      to.y += 1.1;
-      const t = to.dot(dir);
-      if (t < 0 || t > bestD) continue;
-      const closest = origin.clone().addScaledVector(dir, t);
-      const body = u.pos.clone(); body.y += 1.0;
-      if (closest.distanceTo(body) < 0.55) {
-        if (world && world.blockedLOS(origin, body)) continue;
-        best = u; bestD = t;
+      const tests = [
+        { p: u.headPoint(), r: 0.32, part: 'head' },
+        { p: u.bodyPoint(), r: 0.58, part: 'body' }
+      ];
+      for (const t of tests) {
+        const to = new THREE.Vector3().subVectors(t.p, origin);
+        const dist = to.dot(dir);
+        if (dist < 0.15 || dist > bestD) continue;
+        const closest = origin.clone().addScaledVector(dir, dist);
+        if (closest.distanceTo(t.p) > t.r) continue;
+        if (world && world.blockedLOS(origin, t.p)) continue;
+        best = u;
+        bestD = dist;
+        part = t.part;
+        break;
       }
     }
-    return best ? { unit: best, dist: bestD } : null;
+    return best ? { unit: best, dist: bestD, part } : null;
   }
 }
