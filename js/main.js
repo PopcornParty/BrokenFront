@@ -5,6 +5,7 @@ import { missionById, MISSIONS } from './missions.js';
 import { DEFAULT_SETTINGS, VERSION } from './config.js';
 import * as Audio from './audio.js';
 import { renderChangelog, hasUnseenLog, markLogSeen } from './changelog.js';
+import { loadPack, applyPackUI } from './pack.js';
 
 const $ = (id) => document.getElementById(id);
 const hide = (el) => el.classList.add('hidden');
@@ -230,21 +231,18 @@ function wire() {
   });
 }
 
-function boot() {
+async function boot() {
   applySettingsToForm();
   document.body.classList.toggle('swap-hands', !!save.settings.swapHands);
   document.documentElement.style.setProperty('--btn-a', ((save.settings.buttonOpacity ?? 70) / 100).toFixed(2));
   Audio.initAudio(save.settings);
   wire();
-  let p = 8;
-  const iv = setInterval(() => {
-    p = Math.min(100, p + 10);
-    $('boot-fill').style.width = p + '%';
-    if (p >= 100) {
-      clearInterval(iv);
-      showMenu();
-    }
-  }, 80);
+  const fill = $('boot-fill');
+  if (fill) fill.style.width = '8%';
+  await loadPack((p) => { if (fill) fill.style.width = Math.round(8 + p * 90) + '%'; });
+  applyPackUI();
+  if (fill) fill.style.width = '100%';
+  showMenu();
   document.body.addEventListener('pointerdown', () => { Audio.initAudio(save.settings); Audio.resumeAudio(); }, { once: true });
 }
 
