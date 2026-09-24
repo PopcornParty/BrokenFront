@@ -4,6 +4,29 @@ export const SEEN_KEY = 'brokenfront-changelog-seen';
 
 export const CHANGELOG = [
   {
+    version: '1.6.0',
+    title: 'COMBAT PASS',
+    date: '24 September 2026',
+    description: 'Headshots work. Enemies take damage and shoot back. The rifle hits harder. Walking through twenty rounds no longer works.',
+    added: [
+      'Separate head and body hitboxes',
+      'Headshot damage (about two times body damage) and a gold hit marker'
+    ],
+    removed: [
+      'Mission 1 extra health and damage-reduction padding'
+    ],
+    fixed: [
+      'Shots aimed at the head missing the body-only hit test',
+      'Enemies spawned outside the lane who never saw the player',
+      'Some rifles never firing because line of sight only tested the chest'
+    ],
+    improved: [
+      'Weapon damage and fire rate',
+      'Enemy accuracy and shot damage',
+      'Slower health regen after you are hit'
+    ]
+  },
+  {
     version: '1.5.0',
     title: 'TOGGLE AIM AND SEEDED LANE',
     date: '23 September 2026',
