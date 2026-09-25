@@ -1,11 +1,14 @@
 import { Input } from './input.js';
 import { Game } from './game.js';
+import { installObjectives } from './objsys.js';
 import { loadSave, writeSave, createFresh } from './save.js';
 import { missionById, MISSIONS } from './missions.js';
 import { DEFAULT_SETTINGS, VERSION } from './config.js';
 import * as Audio from './audio.js';
 import { renderChangelog, hasUnseenLog, markLogSeen } from './changelog.js';
 import { loadPack, applyPackUI } from './pack.js';
+
+installObjectives(Game);
 
 const $ = (id) => document.getElementById(id);
 const hide = (el) => el.classList.add('hidden');
