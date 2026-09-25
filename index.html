@@ -6,7 +6,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#1a1712" />
-  <meta name="description" content="Broken Front — an original cinematic single-player WWII-inspired first-person shooter for landscape phones." />
   <title>BROKEN FRONT</title>
   <link rel="icon" href="assets/ui/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
@@ -48,12 +47,22 @@
         <div class="menu-actions">
           <button id="btn-continue" class="btn primary hidden">Continue</button>
           <button id="btn-play" class="btn primary">New Campaign</button>
+          <button id="btn-armory" class="btn">Armory</button>
           <button id="btn-settings" class="btn">Settings</button>
           <button id="btn-credits" class="btn">Credits</button>
         </div>
-        <p class="menu-hint">For the best experience, rotate your phone to landscape and enter fullscreen.</p>
+        <p class="menu-hint">Landscape + fullscreen. Follow the gold pole.</p>
         <button id="btn-menu-fs" class="btn">Fullscreen</button>
-        <p id="menu-version" class="menu-version">v1.3.0</p>
+        <p id="menu-version" class="menu-version">v1.7.2</p>
+      </div>
+    </div>
+
+    <div id="armory-screen" class="overlay hidden panel-screen">
+      <div class="panel scroll">
+        <h2>ARMORY</h2>
+        <p class="panel-sub">Equip an unlocked gun. SMG opens after mission 2. Carbine after mission 4.</p>
+        <div id="armory-list"></div>
+        <button id="btn-armory-back" class="btn primary">Back</button>
       </div>
     </div>
 
@@ -109,14 +118,14 @@
         </label>
         <p class="set-sec">Audio</p>
         <label>Master volume <input id="set-master" type="range" min="0" max="100" value="80" /></label>
-        <label>Music volume <input id="set-music" type="range" min="0" max="100" value="35" /></label>
+        <label>Music volume <input id="set-music" type="range" min="0" max="100" value="45" /></label>
         <label>SFX volume <input id="set-sfx" type="range" min="0" max="100" value="85" /></label>
         <p class="set-sec">Controls</p>
         <label>Look sensitivity <input id="set-sens" type="range" min="20" max="200" value="100" /></label>
         <label>Button opacity <input id="set-opacity" type="range" min="25" max="100" value="70" /></label>
         <label class="check"><input id="set-swap" type="checkbox" /> Swap fire / look sides</label>
         <label class="check"><input id="set-vib" type="checkbox" checked /> Vibration (if supported)</label>
-        <label class="check"><input id="set-cam" type="checkbox" checked /> Camera motion</label>
+        <label class="check"><input id="set-cam" type="checkbox" /> Camera motion</label>
         <p class="set-sec">Gameplay</p>
         <label>Difficulty
           <select id="set-diff">
@@ -134,9 +143,7 @@
     <div id="credits-screen" class="overlay hidden panel-screen">
       <div class="panel scroll">
         <h2>Credits</h2>
-        <p>Broken Front is an original fictional project. It is not affiliated with, endorsed by, or adapted from any film, studio, or commercial game.</p>
-        <p>Engine: Three.js (MIT). Audio: original procedural Web Audio. Art: original low-poly procedural geometry and canvas textures.</p>
-        <p>Story: one unnamed company on a fictional front. No real units, no copied scenes.</p>
+        <p>Broken Front is an original fictional project.</p>
         <button id="btn-credits-back" class="btn primary">Back</button>
       </div>
     </div>
