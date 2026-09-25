@@ -1,6 +1,7 @@
 import { Input } from './input.js';
 import { Game } from './game.js';
 import { installObjectives } from './objsys.js';
+import { installFeel, renderArmory } from './extras.js';
 import { loadSave, writeSave, createFresh } from './save.js';
 import { missionById, MISSIONS } from './missions.js';
 import { DEFAULT_SETTINGS, VERSION } from './config.js';
@@ -9,6 +10,7 @@ import { renderChangelog, hasUnseenLog, markLogSeen } from './changelog.js';
 import { loadPack, applyPackUI } from './pack.js';
 
 installObjectives(Game);
+installFeel(Game);
 
 const $ = (id) => document.getElementById(id);
 const hide = (el) => el.classList.add('hidden');
@@ -119,6 +121,7 @@ function showMenu() {
   hide($('boot-screen')); hide($('customize-screen')); hide($('settings-screen'));
   hide($('credits-screen')); hide($('changelog-screen')); hide($('loading-screen'));
   hide($('cutscene-screen')); hide($('pause-screen')); hide($('end-screen'));
+  hide($('armory-screen'));
   hide($('hud')); hide($('touch-layer'));
   show($('menu-screen'));
   $('btn-continue').classList.toggle('hidden', !save.hasProgress);
@@ -127,7 +130,7 @@ function showMenu() {
 
 function loadMissionFlow(id, checkpoint, skipCine) {
   const m = missionById(id);
-  hide($('menu-screen')); hide($('customize-screen')); hide($('pause-screen')); hide($('end-screen'));
+  hide($('menu-screen')); hide($('customize-screen')); hide($('pause-screen')); hide($('end-screen')); hide($('armory-screen'));
   show($('loading-screen'));
   $('load-kicker').textContent = m.kicker;
   $('load-title').textContent = `0${m.id}  ${m.title}`;
@@ -187,6 +190,15 @@ function wire() {
     Audio.resumeAudio(); Audio.sfxUI();
     loadMissionFlow(save.mission || 1, save.checkpoint || 0, true);
   };
+  if ($('btn-armory')) {
+    $('btn-armory').onclick = () => {
+      Audio.sfxUI();
+      renderArmory($('armory-list'), save);
+      hide($('menu-screen'));
+      show($('armory-screen'));
+    };
+  }
+  if ($('btn-armory-back')) $('btn-armory-back').onclick = () => { hide($('armory-screen')); showMenu(); };
   $('btn-settings').onclick = () => { Audio.sfxUI(); applySettingsToForm(); show($('settings-screen')); };
   $('btn-credits').onclick = () => { Audio.sfxUI(); show($('credits-screen')); };
   $('btn-credits-back').onclick = () => { hide($('credits-screen')); };
@@ -202,7 +214,10 @@ function wire() {
   $('btn-settings-back').onclick = () => { readSettingsFromForm(); hide($('settings-screen')); };
   $('btn-customize-back').onclick = () => { hide($('customize-screen')); show($('menu-screen')); };
   $('btn-customize-go').onclick = () => {
+    const keepGuns = { unlocked: save.unlocked, loadout: save.loadout };
     save = createFresh();
+    save.unlocked = keepGuns.unlocked || ['rifle', 'pistol'];
+    save.loadout = keepGuns.loadout || 'rifle';
     save.soldier.name = ($('soldier-name').value || 'Reed').slice(0, 16);
     save.soldier.kit = $('soldier-kit').value;
     save.settings = { ...DEFAULT_SETTINGS, ...save.settings, difficulty: $('soldier-diff').value };
@@ -213,7 +228,7 @@ function wire() {
     Audio.resumeAudio();
     loadMissionFlow(1, 0, false);
   };
-  $('btn-resume').onclick = () => { hide($('pause-screen')); if (game) game.paused = false; };
+  $('btn-resume').onclick = () => { hide($('pause-screen')); if (game) { game.paused = false; if (game.input) game.input.enabled = true; } };
   $('btn-restart-cp').onclick = () => { hide($('pause-screen')); loadMissionFlow(save.mission || 1, save.checkpoint || 0, true); };
   $('btn-pause-settings').onclick = () => { applySettingsToForm(); show($('settings-screen')); };
   $('btn-pause-menu').onclick = () => { if (game) game.running = false; hide($('pause-screen')); showMenu(); };
