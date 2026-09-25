@@ -16,24 +16,27 @@ export function makeTextures() {
     return t;
   };
   const mud = mk(128, 128, (g, w, h) => {
-    g.fillStyle = '#6a5438'; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 80; i++) {
-      g.fillStyle = i % 2 ? '#4a3a24' : '#8a7350';
-      g.fillRect(Math.random() * w, Math.random() * h, 8 + Math.random() * 18, 4);
+    g.fillStyle = '#5c4a32'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 140; i++) {
+      g.fillStyle = i % 3 ? '#3e2f1c' : '#8a7350';
+      g.fillRect(Math.random() * w, Math.random() * h, 6 + Math.random() * 16, 3);
     }
   });
-  mud.repeat.set(12, 16);
+  mud.repeat.set(10, 14);
   const brick = mk(128, 128, (g, w, h) => {
-    g.fillStyle = '#3e322b'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#2c2420'; g.fillRect(0, 0, w, h);
     for (let y = 0; y < h; y += 10) {
       const off = ((y / 10) % 2) * 11;
       for (let x = -22; x < w; x += 22) {
-        g.fillStyle = `rgb(${110 + ((x + y) % 30)},${70 + ((x) % 20)},50)`;
+        g.fillStyle = `rgb(${100 + ((x + y) % 40)},${62 + ((x) % 24)},48)`;
         g.fillRect(x + off + 1, y + 1, 20, 8);
       }
     }
   });
-  const sand = mk(64, 64, (g, w, h) => { g.fillStyle = '#8a7a4e'; g.fillRect(0, 0, w, h); });
+  const sand = mk(64, 64, (g, w, h) => {
+    g.fillStyle = '#8a7a4e'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) { g.fillStyle = '#6e5e38'; g.fillRect(Math.random()*w, Math.random()*h, 4, 2); }
+  });
   const wood = mk(64, 64, (g, w, h) => {
     g.fillStyle = '#3c2818'; g.fillRect(0, 0, w, h);
     g.strokeStyle = 'rgba(20,10,4,0.4)';
@@ -264,7 +267,26 @@ export class World {
     return false;
   }
 
-  setBeacon() {}
+  setMarker(x, z) {
+    if (this.marker && this.marker.parent) this.marker.parent.remove(this.marker);
+    this.marker = null;
+    if (x == null || z == null) return;
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(this.boxGeo, new THREE.MeshBasicMaterial({ color: 0xf0d27a }));
+    pole.scale.set(0.14, 3.4, 0.14);
+    pole.position.y = 1.7;
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
+    lamp.position.y = 3.45;
+    const flag = new THREE.Mesh(this.boxGeo, new THREE.MeshBasicMaterial({ color: 0xe8c76a }));
+    flag.scale.set(0.9, 0.45, 0.05);
+    flag.position.set(0.5, 3.15, 0);
+    g.add(pole, lamp, flag);
+    g.position.set(x, this.heightAt(x, z), z);
+    this.scene.add(g);
+    this.marker = g;
+  }
+
+  setBeacon(x, z) { this.setMarker(x, z); }
 
   update(t, camera) {
     this.smoke.forEach((s, i) => {
@@ -272,6 +294,7 @@ export class World {
       if (camera) s.lookAt(camera.position);
     });
     if (this.sky) this.sky.rotation.y = t * 0.003;
+    if (this.marker) this.marker.rotation.y = t * 1.2;
   }
 
   collide(pos, radius = 0.4) {
@@ -296,7 +319,7 @@ export class World {
       if (ch.isLight || ch.isCamera) continue;
       this.scene.remove(ch);
     }
-    Object.values(this.tex).forEach((t) => t.dispose());
+    Object.values(this.tex).forEach((tex) => tex.dispose());
   }
 }
 
