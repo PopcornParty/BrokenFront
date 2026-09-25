@@ -35,7 +35,11 @@ export class Enemy {
   }
 
   headPoint() {
-    return new THREE.Vector3(this.pos.x, this.pos.y + 1.58, this.pos.z);
+    return new THREE.Vector3(this.pos.x, this.pos.y + 1.62, this.pos.z);
+  }
+
+  midPoint() {
+    return new THREE.Vector3(this.pos.x, this.pos.y + 1.25, this.pos.z);
   }
 
   update(dt, player, world) {
@@ -182,22 +186,23 @@ export class EnemyManager {
     this.units = [];
   }
 
-  rayHit(origin, dir, range = 80, world = null) {
+  rayHit(origin, dir, range = 80) {
     let best = null;
     let bestD = range;
     let part = 'body';
+    const nd = dir.clone().normalize();
     for (const u of this.living()) {
       const tests = [
-        { p: u.headPoint(), r: 0.32, part: 'head' },
-        { p: u.bodyPoint(), r: 0.58, part: 'body' }
+        { p: u.headPoint(), r: 0.48, part: 'head' },
+        { p: u.midPoint(), r: 0.78, part: 'body' },
+        { p: u.bodyPoint(), r: 0.92, part: 'body' }
       ];
       for (const t of tests) {
         const to = new THREE.Vector3().subVectors(t.p, origin);
-        const dist = to.dot(dir);
-        if (dist < 0.15 || dist > bestD) continue;
-        const closest = origin.clone().addScaledVector(dir, dist);
+        const dist = to.dot(nd);
+        if (dist < 0.2 || dist > bestD) continue;
+        const closest = origin.clone().addScaledVector(nd, dist);
         if (closest.distanceTo(t.p) > t.r) continue;
-        if (world && world.blockedLOS && world.blockedLOS(origin, t.p)) continue;
         best = u;
         bestD = dist;
         part = t.part;
